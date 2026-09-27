@@ -1527,6 +1527,23 @@ Quoting a partial verse is allowed, but the API terms say omissions need an elli
 
 ## Hotwire Hot Rates: live triangulation (Mammoth Lakes, Oct 9–11)
 
+> **Re-verified live on 2026-09-27, 23:23–23:38 UTC (evening), with two independent agents: one confirming, one trying to refute.** Nothing was booked; no sign-in; no forms.
+> - **Identity unchanged: The Village Lodge, about 99–99.5%.** All 27 search results were identical to the morning capture, field by field. Five signals now agree:
+>   1. Image ID 2242771.
+>   2. 4.5/1,009 reviews, 0.5 mi from search, $28.75 resort fee.
+>   3. Trilateration 0.000–0.001 mi from the property.
+>   4. Reviews naming "The Village Lodge".
+>   5. New: the detail page now says "guaranteed to be 1 of these 3", listing The Village Lodge plus two vacation-rental decoys. Both decoys have 0–3 reviews and no resort fee, so neither can produce this card.
+> - **Hot Rate unchanged:** "Condo, 2 Bedrooms (Two Bedroom Condominium)", $346.55/nt, **$693.10 all-in** ($635.60 charged by Hotwire, plus $57.50 resort fee at the hotel). Non-refundable, 4 guests maximum.
+> - **Correction to the value math below:** the same room type is on **vacation.hotwire.com (retail), refundable, for all 5 travelers (2 adults + kids 7, 6, 6): $405/nt, $810 total with taxes and fees (resort fee included).**
+>   - Reserve now and pay a deposit.
+>   - Fully refundable before **Wed Oct 7, 7:00 pm**. After that and before arrival, cancelling costs the first night.
+>   - **So the Hot Rate saves about $117 (14%), not $251.** The $944 benchmark below was Google's rate from the morning.
+> - Caveats:
+>   - Expedia's room tile shows "1 King + 1 Queen, sleeps 6". The third child presumably uses the sitting-room queen sofa bed; not verified for this unit type.
+>   - The building (Lincoln House, Grand Sierra Lodge or White Mountain) is not guaranteed.
+> - Raw captures: `scratchpad/hotwire-recheck/`.
+
 **Status: LIVE.** Hot Rates were loaded in a real Chromium browser (Playwright) on hotwire.com on **2026-09-27, 16:03–16:19 UTC**. No sign-in, no account, no booking. Only searches and "view details" pages were loaded (about 10 page loads).
 
 Setup note: the first Chromium launch failed with `ERR_CERT_AUTHORITY_INVALID` because the browser's NSS trust store was empty. I installed `libnss3-tools` and added the session proxy CA (`/root/.ccr/agent-proxy-ca.crt`) to `~/.pki/nssdb`. TLS verification stayed on. After that, hotwire.com loaded normally, with no CAPTCHA and no bot wall.
