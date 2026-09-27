@@ -1,0 +1,14 @@
+{
+  "name": "fall-trip",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fall Trip: an offline-first family guide for an Eastern Sierra fall color weekend.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "icons": "node scripts/icons.mjs",
+    "serve": "npx --yes serve dist -l 5173",
+    "test:offline": "node scripts/test-offline.mjs",
+    "update": "node scripts/update-conditions.mjs && node scripts/build.mjs"
+  }
+}
