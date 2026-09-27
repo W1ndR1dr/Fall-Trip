@@ -3,15 +3,26 @@
 // prefers-reduced-motion, and the loop sleeps when nothing is on screen.
 import { reducedMotion } from './ui.js';
 
-const PALETTE = () => {
-  const cs = getComputedStyle(document.documentElement);
-  return ['--leaf-gold', '--leaf-yellow', '--leaf-orange', '--leaf-red']
-    .map((v) => cs.getPropertyValue(v).trim())
-    .filter(Boolean);
-};
+const PALETTE = () => ['#f2c14e', '#f4d56a', '#e58a2b', '#c2412d'];
 
-// Aspen-ish leaf drawn as two bezier halves around a midrib.
-function drawLeaf(ctx, size, color) {
+// Painted leaf sprites (the same watercolor specimens used in the hunt).
+const SPRITES = ['spec-aspen', 'spec-birch', 'spec-big', 'spec-red', 'spec-aspen', 'spec-cottonwood'].map((n) => {
+  const im = new Image();
+  im.decoding = 'async';
+  im.src = `img/art/${n}.webp`;
+  return im;
+});
+function drawSprite(ctx, size, idx) {
+  const im = SPRITES[idx % SPRITES.length];
+  if (!im.complete || !im.naturalWidth) return false;
+  const h = size * 3.2, w = (h * im.naturalWidth) / im.naturalHeight;
+  ctx.drawImage(im, -w / 2, -h / 2, w, h);
+  return true;
+}
+
+// Fallback leaf drawn as two bezier halves around a midrib.
+function drawLeaf(ctx, size, color, idx = 0) {
+  if (drawSprite(ctx, size, idx)) return;
   ctx.fillStyle = color;
   ctx.beginPath();
   ctx.moveTo(0, -size);
@@ -62,6 +73,7 @@ export function leafFall(host, { count = 14, wind = 0.25 } = {}) {
     rot: rnd(0, Math.PI * 2),
     flip: rnd(0, Math.PI * 2),
     color: colors[Math.floor(Math.random() * colors.length)] || '#e8a317',
+    idx: Math.floor(Math.random() * 6),
   });
   const leaves = Array.from({ length: count }, () => spawn(true));
   let raf = 0;
@@ -97,7 +109,7 @@ export function leafFall(host, { count = 14, wind = 0.25 } = {}) {
       ctx.rotate(L.rot);
       ctx.scale(Math.cos(L.flip) * 0.8 + 0.2 * Math.sign(Math.cos(L.flip)), 1); // 3D-ish tumble
       ctx.globalAlpha = 0.9;
-      drawLeaf(ctx, L.s, L.color);
+      drawLeaf(ctx, L.s, L.color, L.idx);
       ctx.restore();
     }
     raf = requestAnimationFrame(tick);
@@ -141,6 +153,7 @@ export function burst(x, y, { n = 22 } = {}) {
       rot: Math.random() * 6,
       spin: (Math.random() - 0.5) * 10,
       color: colors[Math.floor(Math.random() * colors.length)] || '#e8a317',
+      idx: Math.floor(Math.random() * 6),
     };
   });
   const start = performance.now();
@@ -161,7 +174,7 @@ export function burst(x, y, { n = 22 } = {}) {
       ctx.translate(p.x, p.y);
       ctx.rotate(p.rot);
       ctx.globalAlpha = Math.max(0, 1 - age / 1.4);
-      drawLeaf(ctx, p.s, p.color);
+      drawLeaf(ctx, p.s, p.color, p.idx);
       ctx.restore();
     }
     if (age < 1.4) requestAnimationFrame(tick);

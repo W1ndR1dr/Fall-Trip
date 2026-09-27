@@ -1,7 +1,7 @@
 // Fall Trip: tiny hash router, tab bar, theme, and service worker wiring.
 import * as store from './store.js';
 import { $, toast } from './ui.js';
-import { icons } from './art.js';
+import { doodles as icons, decorate } from './hand.js';
 import { home } from './views/home.js';
 import { plan, packView, beforeView, routeView } from './views/plan.js';
 import { explore, colorView, foodView, activityView } from './views/explore.js';
@@ -14,7 +14,7 @@ const TABS = [
   { href: '#/plan', label: 'Plan', icon: 'plan', match: /^\/(plan|pack|before|route)/ },
   { href: '#/explore', label: 'Explore', icon: 'explore', match: /^\/(explore|color|food|do)/ },
   { href: '#/kids', label: 'Kids', icon: 'kids', match: /^\/kids/ },
-  { href: '#/faith', label: 'Devotions', icon: 'faith', match: /^\/faith/ },
+  { href: '#/faith', label: 'Devotions', icon: 'book', match: /^\/faith/ },
 ];
 
 const ROUTES = [
@@ -76,6 +76,7 @@ function route() {
   main.innerHTML = out.html;
   document.title = out.title ? `${out.title} · Fall Trip` : 'Fall Trip';
   renderTabs(path);
+  decorate(main);
   if (out.mount) cleanup = out.mount(main) || null;
   const y = scrollMemory.get(path) || 0;
   const same = path === lastPath; // re-render in place (e.g., ESV/NIV toggle)

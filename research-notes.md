@@ -1524,3 +1524,183 @@ Quoting a partial verse is allowed, but the API terms say omissions need an elli
 - Raw fetches and parsers: `research/raw/`.
 
 ---
+
+## Hotwire Hot Rates: live triangulation (Mammoth Lakes, Oct 9–11)
+
+**Status: LIVE.** Hot Rates were loaded in a real Chromium browser (Playwright) on hotwire.com on **2026-09-27, 16:03–16:19 UTC**. No sign-in, no account, no booking. Only searches and "view details" pages were loaded (about 10 page loads).
+
+Setup note: the first Chromium launch failed with `ERR_CERT_AUTHORITY_INVALID` because the browser's NSS trust store was empty. I installed `libnss3-tools` and added the session proxy CA (`/root/.ccr/agent-proxy-ca.crt`) to `~/.pki/nssdb`. TLS verification stayed on. After that, hotwire.com loaded normally, with no CAPTCHA and no bot wall.
+
+Raw captures are in `scratchpad/hotwire/`: screenshots `07-…png` to `16-…png`, page text `*.txt`, API JSON `*-all.json` and `*-net.json`, POI JSON `*-poi.json`, and walking routes `walk.json`.
+
+---
+
+### 0. Bottom line
+
+- **Best Hot Rate for this family:** the **"3.5-star All-suites Hotel in Mammoth Lakes area"** (4.5/5, 1,009 reviews, 0.5 mi from the search center).
+  - **It is The Village Lodge (≈99% confidence).**
+  - Choose the **"Condo, 2 Bedrooms (Two Bedroom Condominium)"** room option: **$347/nt, $693 total for 2 nights, all-in.** That is **about $251 (27%) less than the $944 refundable Village Lodge benchmark.**
+  - Location: about 4 minutes' walk to The Village, and every unit has a kitchen and gas fireplace.
+  - **Catch 1: non-refundable.** "All bookings are final (no refunds, no changes)."
+  - **Catch 2: Hotwire allows at most 4 guests per room.** A 5-guest search returns *"Maximum occupants per room exceeded"*. You would book 2 adults + 2 children and then ask the property to add the 5th guest. The property itself allows **6** in a 2-bedroom.
+- **Cheapest good Hot Rate:** "3.5-star Condo". **It is Juniper Springs Resort (≈99%).** The 2-bedroom (with 2 twins) option is **$290/nt, $580 total**, about $206 below the $786 refundable Juniper benchmark. But Juniper is **not walkable** to cafés: 1.4 mi / 29 min to The Village and 1.7 mi to Main St.
+- **Default "hotel chooses room" Hot Rates** ($232–284/nt) are **not safe for 5 people.** At Juniper and Village Lodge, studios and 1-bedrooms have a **maximum occupancy of 4**, and the property enforces maximum occupancy. Only choose a Hot Rate with an explicit 2-bedroom room type.
+
+---
+
+### 1. How the search was run (and occupancy findings)
+
+- **URL format** (found through the site's own search form): `https://www.hotwire.com/hotels/search?destination=Mammoth%20Lakes&startDate=2026-10-09&endDate=2026-10-11&rooms=1&adults=2&children=2`
+- **Children limit in the UI:** the guest picker would not go past 2 children with 2 adults in one room; the "+" button disables.
+- **5 guests in one room is rejected.** Forcing `children=3` in the URL made the search API return **HTTP 400, `"Maximum occupants per room exceeded"`**, and the page showed "Maximum occupants per room exceeded" (screenshot `08-search-2a3c.png`, 16:07 UTC).
+- **Searches that worked:**
+
+| Search | Hot Rates / retail count | Notes |
+|---|---|---|
+| 1 room, 2 adults + 2 children (main dataset) | 11 Hot Rates / 16 retail | 16:06 UTC |
+| 1 room, 2 adults | 11 Hot Rates / 17 retail | 16:18 UTC. Same Hot Rate prices, except Mammoth Mountain Inn a bit lower. Adds a 2.5★ (Mammoth Creek Inn); drops the 2.5★ Quality Inn. |
+| 2 rooms, 2 adults + 3 children | 11 Hot Rates / 15 retail | 16:08 UTC. **Every price exactly doubles** (e.g. Juniper $927, Village Lodge $1,386). Two rooms is never the smart way to fit 5 here. |
+
+- **Hotwire booking terms** on every Hot Rate detail page:
+  - "**Rooms sleep the number of guests.** Bed types and sizes aren't guaranteed."
+  - When you pick a named room type: "Your selected bed type is guaranteed."
+  - "All bookings are final (no refunds, no changes)."
+  - "Your account will be charged for the full amount when you book."
+  - The resort fee is collected by the hotel at check-in. Hotwire's displayed "per night / total" figures **include taxes and the resort fee** (the API's `totalWithResortFee`), under California price-display rules.
+  - Source: `details/hotel/opaque` API responses behind the detail pages listed in §3, accessed 16:10–16:17 UTC.
+
+### 2. How the identities were decoded (method)
+
+Four independent signals were used. They agreed for every Hot Rate that had a detail page.
+
+1. **Image ID leak.** Each Hot Rate card's JSON `imageURL` uses Expedia's lodging path (`images.trvl-media.com/lodging/…/<ExpediaID>/…`). That number equals the `partnerHotelId` and image path of a **named** result in the same search. It also matches Hotwire's public hotel pages: Juniper Springs = h984058 and Village Lodge = h2242771 ([Hotwire Juniper page](https://www.hotwire.com/Mammoth-Lakes-Hotels-Juniper-Springs-Resort.h984058.Hotel-Information), [Hotwire Village Lodge page](https://www.hotwire.com/Mammoth-Lakes-Hotels-The-Village-Lodge.h2242771.Hotel-Information), via web search 2026-09-27 ~16:20 UTC).
+2. **Review fingerprint.** Hot Rate and named result show the identical Expedia rating and review count (e.g. 4.5/1,009, 4.4/1,326), the identical "miles from search", and the identical resort fee to the cent.
+3. **Trilateration.** Each Hot Rate detail page lists exact distances to about 10 points of interest, with coordinates, through the `v1/poi` API. A least-squares fit of those distances puts the hidden hotel **0.001–0.07 mi from the named hotel's published coordinates**. The next-closest property is at least 0.13 mi away (table in §3).
+4. **Review text.** The Hot Rate "content" API returns guest reviews that name the property. For example, the all-suites Hot Rate returned a review saying "…our stay at **The Village Lodge**".
+
+BetterBidding's Hotwire list for Mammoth Lakes ([link](https://www.betterbidding.com/index.php?app=hotel_lists&location=Mammoth+Lakes-CA&tid=971), fetched 2026-09-27 ~16:21 UTC) still shows no hotel entries without JavaScript. It was not needed.
+
+### 3. Hot Rates found (1 room, 2 adults + 2 children, Oct 9–11)
+
+All prices are Hotwire's all-in display (tax + resort fee). "Strike" is Hotwire's "retail" comparison per night. **Every Hot Rate is non-refundable, and the booking is for 4 guests maximum.**
+
+| # | Hot Rate card (as shown) | Rating / reviews | Dist. from search | Amenity icons (API codes) | Default room $/nt · 2-nt total (strike) | Named room options on detail page ($/nt · total) | **Identity** · confidence | Runner-up | Key evidence |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | **3.5★ All-suites Hotel** ("Unique") | 4.5 / 1,009 | 0.5 mi | Suite, Resort, Slopeside, Smoke-free, Fitness, Pool, Restaurant, Business ctr, Laundry | $279 · $558 (strike $365) | **Condo, 2 Bedrooms (Two Bedroom Condominium): $347 · $693** | **The Village Lodge** · **99%** | Westin Monache (fit is 0.17 mi off) | Image ID 2242771 = Village Lodge. Retail Village Lodge also shows 4.5/1,009, 0.5 mi, $28.75 resort fee. Trilateration lands **0.004 mi** from it (Village Gondola Station 0.12 mi). Review text names "The Village Lodge". |
+| 2 | **3.5★ Condo** | 4.4 / 1,326 | 1.1 mi | Slopeside, **Full kitchen**, Smoke-free, Daily housekeeping, Fitness, Pool, Business ctr, Front desk, 24-h desk | $232 · $463 (strike $302) | **Condo, 2 Bedrooms (Two Bedroom Condominium with 2 Twins): $290 · $580** | **Juniper Springs Resort** · **99%** | Discovery 4 (0.53 mi off) | Image ID 984058 = Juniper. 4.4/1,326 and $28.50 resort fee identical to retail. Trilateration **0.005 mi** (Eagle Express lift 0.07 mi). Reviews mention "steps to the Eagle Lodge". |
+| 3 | **3.5★ Hotel** | 4.3 / 401 | 0.7 mi | Free parking, Free internet, Pet friendly, Smoke-free, Fitness, Pool, Restaurant, Laundry | $284 · $567 (strike $349) | Deluxe Suite, Fireplace: $343 · $687. Two Bedroom Condo: $443 · $887 | **Outbound Mammoth** (the former Sierra Nevada Resort, 164 Old Mammoth Rd) · **98%** | Shilo Inn (0.22 mi off) | Image ID 60937 = Outbound. 4.3/401 and $29.05 resort fee identical. Trilateration 0.07 mi (Mammoth Hospital 0.19 mi). A review mentions the "fireplace suite". Former name per [Outbound Instagram / search result](https://www.instagram.com/outboundmammoth/p/Cwnjgalx6ht/). |
+| 4 | **3★ "New To Hotwire" Hotel** | 4.0 / 1,024 | 3.4 mi | Pet friendly, Slopeside, Smoke-free, Fitness, Pool, Restaurant, Business ctr, Laundry, Internet | $184 · $368 (strike $238) | Loft Room Sleeps 4: $218 · $435. Studio Condo: $243 · $485. 1-BR Condo: $268 · $535 | **Mammoth Mountain Inn** · **99%** | none (next is 2.3 mi off) | Image ID 983564. 4.0/1,024, 3.4 mi, $28.50 resort fee identical. Trilateration 0.001 mi (Panorama Gondola 0.04 mi). |
+| 5 | **3★ Hotel** | 4.1 / 54 | 1.0 mi | Free internet, Smoke-free, Pool, Restaurant, Laundry, Golf nearby, Spa services, Accessible | $276 · $552 (strike $288) | 1-BR Condo Loft: $297 · $595. **2-BR Condo: $349 · $697.** 2-BR Condo Loft: $440 · $880 | **Discovery 4** (condos) · **93%** | Mountainback at Mammoth (0.13 mi) | 4.1/54 and 1.0 mi identical to retail Discovery 4. No resort fee, but a $250 breakage deposit. Trilateration 0.006 mi from Discovery 4 vs 0.134 mi from Mountainback. No image on the card. |
+| 6 | **4★ Condo** ("Classic") | 4.5 / "0" (89% recommend) | not shown | Free parking, Free internet, Pet friendly, Smoke-free, Fitness, Pool, Restaurant, Business ctr, Laundry | $399 · $797 (**no discount shown**) | Detail page **failed to load twice** (16:15 and 16:18 UTC) | **The Westin Monache Resort** · **~75%** | A 4★ condo collection such as The Sierra House or "Village 2230 White Mountain Lodge" (~20%) | Resort fee $29.00/nt is identical to retail Westin ($29.00). 4.5 rating is identical. Amenities are a subset of Westin's retail list. Westin's retail price for 4 guests is $414/nt ($828), only 4% more. Limelight, the other 4★ hotel, appears as its own Hot Rate (#7). |
+| 7 | 4★ Hotel | no reviews | 0.4 mi | Continental breakfast, Free internet, Smoke-free, Fitness, Pool, Restaurant | $460 · $920 (strike $511) | not opened | **Limelight Mammoth** · 97% | Westin | Image ID 119028980 = Limelight. 0.4 mi and no reviews identical. |
+| 8 | 2.5★ Hotel | 3.4 / 1,013 | 0.7 mi | Free parking, Continental breakfast, Free internet, Pet friendly, Laundry | $162 · $323 (strike $219) | not opened | **Shilo Inns Mammoth Lakes** · 97% | — | Image ID 17355. 3.4/1,013 identical. |
+| 9 | 2.5★ Hotel ("Family-friendly") | 3.8 / 1,010 | ≤0.25 mi | Free parking, Continental breakfast, Free internet, Business ctr, Laundry | $184 · $369 (strike $205) | not opened | **Quality Inn Near Mammoth Mtn** · 97% | — | Image ID 17405. 3.8/1,010 identical. |
+| 10 | 2★ Hotel | 3.9 / 1,004 | ≤0.25 mi | Free parking, Free internet, Pet friendly, Laundry | $158 · $316 (strike $198) | not opened | **Motel 6 Mammoth Lakes** · 97% | — | Image ID 996309. 3.9/1,004 identical. |
+| 11 | 2★ "New To Hotwire" Hotel | 3.7 / 427 | ≤0.25 mi | Free parking, Free internet, Pet friendly, Restaurant, Laundry | $197 · $395 (no discount) | not opened | **SureStay Plus by Best Western** · 97% | — | Image ID 874993. 3.7/427 identical. |
+| (2-adult search only) | 2.5★ Hotel | 4.2 / 982 | 1.0 mi | Free parking, Free internet, Fitness | $176 · $352 | — | **The Mammoth Creek Inn** · 97% | — | Image ID 1166462. 4.2/982 identical. |
+
+**Sources for the table**
+
+- Search: `https://www.hotwire.com/hotels/search?destination=Mammoth%20Lakes&startDate=2026-10-09&endDate=2026-10-11&rooms=1&adults=2&children=2`, accessed 2026-09-27 16:06 UTC. Also the same search with `children=0` (16:18 UTC) and with `rooms=2&children=3` (16:08 UTC).
+- Detail pages (all accessed 2026-09-27):
+
+| Hot Rate | Detail page URL | Time (UTC) |
+|---|---|---|
+| All-suites (Village Lodge) | `https://www.hotwire.com/hotels/details/MjExMTE2NTQ2MjM2OjMxMTI0NjQ3Mzc0OTI` (ref 311-246-473-7492) | 16:10 |
+| Condo (Juniper) | `…/details/MjExMTE2NTQyMDk3OjMxMTI0NjQ3NTUwODc` | 16:11 |
+| 3.5★ Hotel (Outbound) | `…/details/MjExMTE2NTQyMDk3OjMxMTI0NjQ3NTUwODM` | 16:13 |
+| Mammoth Mountain Inn | `…/details/MjExMTE2NTQyMDk3OjMxMTI0NjQ3NTUwODY` | 16:14 |
+| 3★ Hotel (Discovery 4) | `…/details/MjExMTE2NTQ3MjQ3OjMxMTI0NjQ4MTA2NzE` | 16:16 |
+
+Result IDs are session-bound and will not reopen later.
+
+#### Trilateration results (from Hotwire's `v1/poi` distances)
+
+| Hot Rate | Fitted location | Error of fit | Nearest named hotel (distance) | 2nd nearest |
+|---|---|---|---|---|
+| All-suites | 37.6516, −118.9864 | 0.003 mi | Village Lodge (0.004 mi) | Westin Monache (0.166) |
+| Condo | 37.6360, −118.9891 | 0.003 | Juniper Springs (0.005) | Discovery 4 (0.528) |
+| 3★ Hotel | 37.6424, −118.9945 | 0.005 | Discovery 4 (0.006) | Mountainback (0.134) |
+| 3.5★ Hotel | 37.6436, −118.9675 | 0.006 | Outbound Mammoth (0.072) | Shilo Inn (0.219) |
+| 3★ New-to-Hotwire | 37.6514, −119.0386 | 0.001 | Mammoth Mountain Inn (0.001) | Mammoth Ski & Racquet (2.26) |
+
+Named-hotel coordinates are the `hotelLatLong` values in the same Hotwire search JSON.
+
+#### Retail (named) results on the same search (1 room, 4 guests, all-in 2-night totals)
+
+These are the cheapest room types, probably not 5-person units.
+
+| Property | 2-night total |
+|---|---|
+| Mammoth Mountain Inn | $426 |
+| Juniper Springs | $538 |
+| Westin Monache | $828 |
+| Village Lodge | $651 |
+| Mammoth Mountain Reservations Condo Collection | $653 |
+| Limelight | $1,131 |
+| Shilo Inn | $392 |
+| Discovery 4 | $595 |
+| Mammoth Ski & Racquet Club | $653 |
+| Outbound | $718 |
+| Motel 6 | $339 |
+| Ventura Grand Inn | $380 |
+| The Mammoth Inn | $776 |
+| Quality Inn | $412 |
+| Mountainback | $849 |
+| SureStay Plus | $402 |
+
+Source: same search URL, 16:06 UTC.
+
+### 4. Top candidates: walkability, beds for 5, kitchen and fireplace
+
+Walking routes come from the OSM foot router (`routing.openstreetmap.de/routed-foot`). Café coordinates come from Nominatim: Black Velvet 3343 Main St → 37.64766, −118.97212; Stellar Brew 3280 Main St → 37.64822, −118.97011; 437 Old Mammoth Rd → 37.63968, −118.96633; The Village 6201 Minaret Rd → 37.65052, −118.98518. Both were accessed 2026-09-27 ~16:22 UTC.
+
+| Property (Hot Rate) | To The Village (6201 Minaret; RMCF Village store) | To Black Velvet / Stellar Brew (Main St) | To 437 Old Mammoth Rd (Booky Joint, RMCF) | Sleeps 5? | Kitchen / fireplace |
+|---|---|---|---|---|---|
+| **Village Lodge** (1111 Forest Trail) | **0.17 mi / 4 min** (shops and restaurants are downstairs) | 1.0 mi / 22 min · 1.1 mi / 24 min | 2.0 mi / 43 min | Default room: studio or 1-BR, **max 4, so no**. **2-BR condo: max 6, yes.** Hotwire reservation is for 4, so the 5th guest has to be added with the property. | Every unit has a full kitchen and a **gas fireplace**, per [mammothmountain.com Village Lodge page](https://www.mammothmountain.com/plan-your-trip/mammoth-hotels/the-village-lodge) (accessed 16:19 UTC). The page lists maximum occupancy as Studio 4, 1 BR 4, 1 BR + Den 6, 2 BR 6, 3 BR 8, and says it enforces maximum occupancy. |
+| **Juniper Springs** (4000 Meridian Blvd) | 1.4 mi / 29 min | 1.7 mi / 37 min · 1.8 mi / 39 min | 1.5 mi / 33 min | 2-BR condo "with 2 Twins": max 6, yes. | Full kitchen and gas fireplace in all units. Fireplaces are off in summer but "may be lit upon request". Occupancy: Studio 4, 1 BR 4, 2 BR 6. Source: [Juniper page](https://www.mammothmountain.com/plan-your-trip/mammoth-hotels/juniper-springs-resort) (16:19 UTC). There is a coffee shop on site. |
+| **Outbound Mammoth** | 1.5 mi / 32 min | **0.6 mi / 12 min · 0.5 mi / 11 min** | **0.3 mi / 7 min** | "Deluxe Suite, Fireplace": occupancy not stated, assume 4. "Two Bedroom Condo" ($887) probably sleeps 5 but was not verified. | Fireplace suite. Kitchen only in condos (not verified). |
+| Westin Monache (4★ condo guess) | 0.2 mi / 5 min | 1.1 mi / 23 min | 2.0 mi / 44 min | Room type unknown (the detail page did not load) | Not verified |
+| Discovery 4 | 1.0 mi / 21 min | 1.5–1.6 mi / 33 min | 2.3 mi | 2-BR condo $697. Occupancy not verified. | Condo kitchens likely. $250 breakage deposit. |
+| Mammoth Mountain Inn | 4.2 mi (not walkable) | 5 mi | 6 mi | Largest option shown is a 1-BR condo. Loft room "sleeps 4". | — |
+
+The Village is the walkable café, shops and restaurants cluster. Outbound is the only Hot Rate within a short walk of the Main St and Old Mammoth Rd cafés, and its 2-bedroom option ($887) costs about as much as the refundable Village Lodge benchmark.
+
+### 5. Value vs. refundable benchmarks (5 guests, Oct 9–11)
+
+| Option | 2-night total | Per night | Refundable? | Fits 5 legitimately? | Walkable? | Hot Rate saving |
+|---|---|---|---|---|---|---|
+| **Village Lodge Hot Rate, 2-BR condo** | **$693** ($636 charged by Hotwire + $57.50 resort fee paid at hotel) | $347 | **No** | Unit max is 6. **Booking is for 4**, so call to add the 5th child. | **Yes** (at The Village) | vs Village Lodge $944: **−$251 (−27%)** |
+| Village Lodge, refundable (benchmark) | $944 | $402 | Free cancel until 2 full days out (≈ Oct 6, 11:59 pm) | Yes | Yes | — |
+| **Juniper Hot Rate, 2-BR "with 2 Twins"** | **$580** ($523 + $57 resort fee) | $290 | No | Unit max is 6. Booking is for 4. | No (1.4–1.8 mi) | vs Juniper $786: **−$206 (−26%)** |
+| Juniper Springs, refundable (benchmark) | $786 | $339 | Free cancel until 2 days out | Yes | No | — |
+| Mammoth Mountain Inn, refundable (benchmark) | $841 | $362 | Yes | Yes | No | Hot Rate 1-BR is $535, but it is not walkable. |
+| Austria Hof (benchmark) | $680 | $290 | — | — | Close to The Village | No Hot Rate matches it. |
+| Airbnb 2-BR condo with fireplace (benchmark) | $468 + tax (roughly $540–560 with 15–16% tax; fees not verified) | ~$270 | Per listing policy | Yes | Depends on the listing | Cheaper than any 2-BR Hot Rate |
+| Two Hotwire rooms to fit 5 (e.g. 2 × Juniper) | $927 | — | No | Yes | — | Worse than one 2-BR |
+
+Caveat: I could not confirm whether the $786, $944 and $841 benchmarks include the property's approximately $57 resort fee. If they do not, the Hot Rate savings are about $57 larger.
+
+**Does a Hot Rate genuinely beat them?**
+
+- **Against the Village Lodge refundable rate: yes, clearly,** once the family is certain about Oct 9–11. It is the same property, a guaranteed 2-bedroom condo type, and **$251 less**. What you give up:
+  1. **Refundability.** The refundable rate can be cancelled free until about Oct 6–7. That is worth something if weather (early snow on 395/203) or illness is a risk.
+  2. **A 4-guest reservation for a unit that allows 6.** Adding the 5th child is very likely fine because the unit is under its occupancy cap. Still, confirm with Mammoth Lodging Collection (800-MAMMOTH) before paying. The request is simply "a third-party-booked 2BR for 4; can we register a 5th guest, a child?"
+  3. **Unit and floor assignment** is up to the hotel. The fireplace and kitchen are in every unit, so this matters little.
+- **Against Juniper refundable ($786):** the Juniper Hot Rate saves $206, but Juniper does not meet the "walkable to cafés" priority. **The Village Lodge Hot Rate costs only $113 more than the Juniper Hot Rate and puts you at The Village,** so it is the better Hot Rate for this family.
+- **Against the Airbnb 2-BR ($468 + tax):** the Airbnb is still about **$130–150 cheaper** than the Village Lodge Hot Rate and sleeps 5 on the booking. The Hot Rate is worth the difference only if the Airbnb is not near The Village or Main St, or if you value the lodge's pool and hot tubs, front desk, and Village location. If the Airbnb is walkable and has a moderate cancellation policy, it remains the best value.
+
+### 6. Recommendation
+
+1. **If you want The Village (the walkable priority) and your dates are firm: book the Hotwire "3.5-star All-suites Hotel in Mammoth Lakes area", room option "Condo, 2 Bedrooms (Two Bedroom Condominium)", about $347/nt / $693 total.**
+   - Before paying, check that the card still shows **4.5/5 with 1,009 reviews**, **0.5 mi from search**, a **$28.75/night resort fee**, and **Village Gondola Station 0.1 mi** under "Location". That combination is The Village Lodge.
+   - Book it as 2 adults + 2 children, then call the property to add the 5th guest. Better still, call first.
+   - Keep any refundable booking until the Hot Rate is confirmed, then cancel the refundable one (free until about Oct 6–7).
+2. **If flexibility matters more** (weather, sick kids): keep the refundable Village Lodge ($944) or Juniper ($786) booking. The Hot Rate saves about $200–250, but that money is lost if you cannot go.
+3. **Do not** book a default "Hotel chooses bed type" Hot Rate for 5 people. At these properties it will be a studio or 1-bedroom with a maximum of 4.
+4. **Skip:**
+   - The 4★ Condo (probably Westin): only about 4% off retail, and its room type could not be seen.
+   - Two-room Hot Rates: double the price.
+   - Mammoth Mountain Inn: 4 mi from town.
+   - Outbound's 2-bedroom ($887): walkable to Main St but barely cheaper than the refundable Village Lodge.
+5. **Prices are live as of 2026-09-27 16:06–16:18 UTC.** Hot Rates change often and may drop or disappear closer to Oct 9. A quick re-check on Oct 5–6, before the refundable cancel deadline, is worthwhile.

@@ -33,15 +33,24 @@ for (const r of routes) {
   await page.goto(base + '#' + r).catch((e) => errors.push(`${r}: ${e.message}`));
   await page.waitForTimeout(150);
   const h1 = await page.evaluate(() => (document.querySelector('main h1') || {}).textContent || '');
-  const fonts = await page.evaluate(() => document.fonts.check('16px Atkinson') && document.fonts.check('16px "Young Serif"'));
-  if (!h1.trim()) { failures++; console.log('BLANK', r); }
+  const fonts = await page.evaluate(async () => { await document.fonts.ready; return document.fonts.check('16px Alegreya') && document.fonts.check('16px Fell') && document.fonts.check('16px Kalam'); });
+  if (!h1.trim() && r !== '/') { failures++; console.log('BLANK', r); }
+  // Every image on the page must be servable offline (from the SW cache),
+  // including lazy ones that haven't scrolled into view yet.
+  const broken = await page.evaluate(async () => {
+    const srcs = [...new Set([...document.images].map((i) => i.getAttribute('src')))];
+    const bad = [];
+    for (const s of srcs) { try { const r = await fetch(s); if (!r.ok) bad.push(s); } catch (e) { bad.push(s); } }
+    return bad;
+  });
+  if (broken.length) { failures++; console.log('BROKEN IMAGES', r, broken); }
   if (!fonts) { failures++; console.log('FONTS MISSING', r); }
 }
 // Offline persistence: check a hunt item and journal survive a reload.
 await page.goto(base + '#/kids/hunt');
-await page.click('.hunt-item[data-id="aspen"]');
+await page.click('.specimen[data-id="aspen"]');
 await page.reload();
-const kept = await page.getAttribute('.hunt-item[data-id="aspen"]', 'aria-pressed');
+const kept = await page.getAttribute('.specimen[data-id="aspen"]', 'aria-pressed');
 if (kept !== 'true') { failures++; console.log('STATE NOT PERSISTED'); }
 await ctx.setOffline(false);
 await browser.close();

@@ -1,137 +1,103 @@
-import * as store from '../store.js';
 import { esc, now, hasNames, kids } from '../ui.js';
-import { leaves, things, icons, tracks as trackArt } from '../art.js';
 import { leafFall } from '../fx.js';
 import { mountStory } from '../story.js';
-import { days, DEPART, HOME_BY, sun } from '../content/trip.js';
-import { findDevotion, fmtTime, tripDay } from './common.js';
 import { checklist } from '../store.js';
-import { hunt } from '../content/kids.js';
+import { days, DEPART, HOME_BY, sun } from '../content/trip.js';
+import { art, icons, slip, findDevotion, fmtTime, tripDay } from './common.js';
 
 const CHAPTERS = [
-  { look: 'home', when: 'Friday, noon', title: 'The car is packed', text: 'Cocoa in the thermos, crayons in the seat pockets, and five of us pointed east. Somewhere past the hills, the season is changing.', link: ['#/pack', 'Packing list'] },
-  { look: 'orchard', when: 'Friday afternoon · Oakdale', title: 'Seedtime and harvest', text: 'Orchards in rows, apples on the stands, and goats who will eat right out of your hand. Everything here is being gathered in.', link: ['#/faith/fri', 'Friday devotion'] },
-  { look: 'granite', when: 'Friday golden hour · Tioga Road', title: 'Up to the granite', text: 'Glaciers polished these domes smooth. We climb to 9,945 feet, the highest highway pass in California, as the sun turns the rock pink.', link: ['#/faith/m-granite', '"The sky is talking"'] },
-  { look: 'lake', when: 'Saturday · Mono Lake', title: 'Towers grown by springs', text: 'A lake saltier than the ocean, full of tiny brine shrimp. Its tufa towers grew where spring water bubbled up, a little at a time, for hundreds of years.', link: ['#/kids/rocks', 'Rocks & volcanoes'] },
-  { look: 'aspen', when: 'Saturday · Lundy & Conway', title: 'Into the gold', text: 'The gold was inside every aspen leaf all summer, hidden under the green. Now it shines. Listen: the leaves quake and clap. Look: a beaver was here.', link: ['#/kids/leaves', 'Why leaves change'] },
-  { look: 'night', when: 'Saturday night · New Moon', title: 'The darkest sky of the month', text: 'No moon at all. Just the Milky Way, golden Saturn, and more stars than we can count. He knows every one by name.', link: ['#/kids/sky', 'Night sky guide'] },
-  { look: 'west', when: 'Sunday · The Lord\'s Day', title: 'Home again, grateful', text: 'A morning with a view, a song, and one whispered thank-you each. Then down the mountains with pockets full of leaves.', link: ['#/faith/sun', 'Sunday devotion'] },
+  { route: 'packed', art: 'vig-packed', when: 'Friday · noon', title: 'The car is packed', text: 'Cocoa in the thermos, crayons in the seat pockets, and five of us pointed east. Somewhere past the hills, the season is changing.', link: ['#/pack', 'The packing list'] },
+  { route: 'orchard', art: 'vig-orchard', when: 'Friday afternoon · Oakdale', title: 'Seedtime and harvest', text: 'Orchards in rows, apples on the stands, and goats who will eat right out of your hand. Everything here is being gathered in.', link: ['#/faith/fri', 'Friday’s devotion'] },
+  { route: 'granite', art: 'vig-granite', when: 'Friday golden hour · Tioga Road', title: 'Up to the granite', text: 'Glaciers polished these domes smooth. As the sun goes low, the rock turns pink and the whole sky seems to be talking.', link: ['#/faith/m-granite', '“The sky is talking”'] },
+  { route: 'tioga', art: 'vig-home', when: 'Friday dusk · 9,945 feet', title: 'Over the top', text: 'The highest highway pass in California, then down the long grade to Mono Lake in the last light. Mammoth by bedtime.', link: ['#/plan/fri', 'Friday, hour by hour'] },
+  { route: 'tufa', art: 'vig-tufa', when: 'Saturday · Mono Lake', title: 'Towers grown by springs', text: 'A lake saltier than the ocean, full of tiny brine shrimp. Its tufa towers grew where spring water bubbled up, a little at a time, for hundreds of years.', link: ['#/kids/rocks', 'Rocks & volcanoes'] },
+  { route: 'aspens', art: 'vig-aspens', when: 'Saturday · Lundy & June Lake', title: 'Into the gold', text: 'The gold was inside every aspen leaf all summer, hidden under the green. Listen: the leaves quake and clap. Look closer: a beaver was here.', link: ['#/kids/leaves', 'Why leaves change'] },
+  { route: 'night', art: 'vig-night', when: 'Saturday night · New Moon', title: 'The darkest sky of the month', text: 'No moon at all. Just the Milky Way, golden Saturn, and more stars than we can count. He knows every one by name.', link: ['#/kids/sky', 'The night-sky guide'] },
+  { route: 'home', art: 'vig-home', when: 'Sunday · the Lord’s Day', title: 'Home again, grateful', text: 'A morning with a view, a song, and one whispered thank-you each. Then down the mountains with our pockets full of leaves.', link: ['#/faith/sun', 'Sunday’s devotion'] },
 ];
 
-function countdownParts(ms) {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  return { d: Math.floor(s / 86400), h: Math.floor((s % 86400) / 3600), m: Math.floor((s % 3600) / 60) };
-}
+const TOC = [
+  ['#/plan', 'The Plan', 'hour by hour, with room to breathe', 'II'],
+  ['#/explore', 'Adventures', 'a menu of optional fun', 'III'],
+  ['#/kids/hunt', 'The Leaf Hunt', 'three explorers, eleven treasures', 'IV'],
+  ['#/faith', 'Devotions', 'look · read · wonder · pray · do', 'V'],
+  ['#/color', 'Where the Gold Is', 'this week’s color report', 'VI'],
+  ['#/kids/sky', 'The Night Sky', 'a New Moon weekend', 'VII'],
+  ['#/kids', 'Explorer HQ', 'tracks, rocks, games, crafts', 'VIII'],
+  ['#/pack', 'Packing', 'layers for the 20s to the 70s', 'IX'],
+  ['#/before', 'Before We Go', 'Friday-morning checks', 'X'],
+];
 
+const countdown = (ms) => {
+  const s = Math.max(0, Math.floor(ms / 1000));
+  return { d: Math.floor(s / 86400), h: Math.floor((s % 86400) / 3600) };
+};
 function phase(t) {
-  const dep = new Date(DEPART).getTime();
-  const end = new Date(HOME_BY).getTime();
-  if (t < dep - 3 * 3600e3) return 'before';
-  if (t > end + 4 * 3600e3) return 'after';
+  if (t < new Date(DEPART).getTime() - 3 * 3600e3) return 'before';
+  if (t > new Date(HOME_BY).getTime() + 4 * 3600e3) return 'after';
   return 'during';
 }
 
-function nextItems(t) {
+const emblem = () => `<svg class="emblem" viewBox="0 0 140 170" aria-hidden="true"><defs>
+  <linearGradient id="foil" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f7e2a0"/><stop offset=".35" stop-color="#d9ab4a"/><stop offset=".55" stop-color="#f3d587"/><stop offset="1" stop-color="#a97a26"/></linearGradient></defs>
+  <g transform="rotate(-10 70 80)"><path d="M70 12C104 36 124 70 120 100C116 126 94 136 70 130C46 136 24 126 20 100C16 70 36 36 70 12Z" fill="url(#foil)"/>
+  <path d="M70 22V128M70 56L100 42M70 56L40 42M70 82L106 70M70 82L34 70M70 106L100 98M70 106L40 98" stroke="#7a5518" stroke-width="2" fill="none" stroke-linecap="round" opacity=".55"/>
+  <path d="M67 130h6v34h-6z" fill="url(#foil)"/></g>
+  <circle cx="70" cy="80" r="66" fill="none" stroke="url(#foil)" stroke-width="1.5" stroke-dasharray="2 5"/></svg>`;
+
+function todaySlip(t) {
   const all = days.flatMap((d) => d.items.map((it) => ({ ...it, day: d })));
   const idx = all.findIndex((it) => new Date(it.t).getTime() > t);
-  const current = idx === -1 ? all[all.length - 1] : all[Math.max(0, idx - 1)];
+  const cur = idx === -1 ? all[all.length - 1] : all[Math.max(0, idx - 1)];
   const next = idx === -1 ? [] : all.slice(idx, idx + 2);
-  return { current, next };
-}
-
-function todayCard(t) {
-  const { current, next } = nextItems(t);
-  const dayId = tripDay(new Date(t)) || 'fri';
-  const s = sun[dayId];
-  const dv = findDevotion(dayId);
-  return `<section class="card today" aria-labelledby="today-h">
-    <div class="kicker">${esc(s.date)} · Today</div>
-    <h2 id="today-h">${esc(current.day.title)}</h2>
-    <div class="next" style="margin-top:10px">
-      <div class="time">${fmtTime(current.t)}</div>
-      <div><b>Now-ish:</b> ${esc(current.title)}<div class="muted small">${esc(current.text)}</div></div>
-      ${next.map((n) => `<div class="time">${fmtTime(n.t)}</div><div><b>Next:</b> ${esc(n.title)}</div>`).join('')}
+  const s = sun[tripDay(new Date(t)) || 'fri'];
+  const dv = findDevotion(cur.day.id);
+  return slip(`<span class="tape corner-l"></span><div class="kicker">${esc(s.date)} · today</div><h2>${esc(cur.day.title)}</h2>
+    <div class="today-grid" style="margin-top:10px">
+      <span class="t">${fmtTime(cur.t)}</span><span><b>Now-ish:</b> ${esc(cur.title)}</span>
+      ${next.map((n) => `<span class="t">${fmtTime(n.t)}</span><span><b>Next:</b> ${esc(n.title)}</span>`).join('')}
     </div>
-    <div class="sunbar" style="margin-top:12px">
-      <div><span>Sunrise</span><b>${s.sunrise}</b></div>
-      <div><span>Golden hr</span><b>${s.goldenPM.split('–')[0]}</b></div>
-      <div><span>Sunset</span><b>${s.sunset}</b></div>
-      <div><span>Dark</span><b>${s.dark}</b></div>
-    </div>
-    <div class="btn-row"><a class="btn" href="#/plan/${current.day.id}">${icons.plan}Full day</a>
-    ${dv ? `<a class="btn ghost" href="#/faith/${dv.id}">${icons.faith}Today's devotion</a>` : ''}
-    <a class="btn ghost" href="#/explore">${icons.explore}What else?</a></div>
-  </section>`;
-}
-
-function quickLinks() {
-  const h = checklist('hunt:0').count() + checklist('hunt:1').count() + checklist('hunt:2').count();
-  return `<nav class="quick" aria-label="Quick links">
-    <a href="#/plan">${leaves.aspen()}<b>The plan</b><span>Hour by hour, with room to breathe</span></a>
-    <a href="#/explore">${things.cocoa()}<b>Pick an adventure</b><span>A menu of optional fun</span></a>
-    <a href="#/kids/hunt">${leaves.red()}<b>Leaf hunt</b><span>${h ? `${h} treasures found` : '3 explorers, 14 treasures'}</span></a>
-    <a href="#/faith">${things.book()}<b>Devotions</b><span>Look · Read · Wonder · Pray · Do</span></a>
-    <a href="#/color">${leaves.big()}<b>Color report</b><span>Where the gold is</span></a>
-    <a href="#/kids/sky">${things.moon(0.12, true)}<b>Night sky</b><span>New Moon on Saturday</span></a>
-    <a href="#/pack">${things.pumpkin()}<b>Packing list</b><span>Layers for 20s to 70s</span></a>
-    <a href="#/before">${things.apple()}<b>Before we go</b><span>Morning-of checks</span></a>
-  </nav>`;
+    <p class="typed small muted" style="margin-top:10px">SUNRISE ${s.sunrise} · GOLDEN ${s.goldenPM.split('–')[0]} · SUNSET ${s.sunset} · DARK ${s.dark}</p>
+    <div class="btn-row"><a class="btn small" href="#/plan/${cur.day.id}">${icons.plan}The whole day</a>${dv ? `<a class="btn line small" href="#/faith/${dv.id}">${icons.faith}Today’s devotion</a>` : ''}</div>`, { key: 'today' });
 }
 
 export function home() {
   const t = now().getTime();
   const ph = phase(t);
-  const c = countdownParts(new Date(DEPART).getTime() - t);
+  const c = countdown(new Date(DEPART).getTime() - t);
   const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-  const hello = hasNames() ? `Hi, ${kids().map(esc).join(', ')}!` : 'Welcome, explorers!';
+  const names = hasNames() ? kids().map(esc).join(', ') : '';
+  const found = [0, 1, 2].reduce((a, i) => a + checklist('hunt:' + i).count(), 0);
 
-  const hero = `<section class="hero" aria-label="Welcome">
-    <div class="leafmark" aria-hidden="true">${leaves.aspen()}</div>
-    <div class="hero-inner">
-      <div class="kicker">Eastern Sierra · Oct 9–11</div>
-      <h1>Fall Trip</h1>
-      <p class="lede" style="margin-top:6px">${hello} A weekend to notice the beauty God made, together.</p>
-      ${ph === 'before' ? `<div class="count" role="timer" aria-label="Countdown to departure">
-        <div><b data-cd="d">${c.d}</b><span>days</span></div><div><b data-cd="h">${c.h}</b><span>hours</span></div><div><b data-cd="m">${c.m}</b><span>min</span></div></div>
-        <p class="muted small">until we roll out (Friday at noon)</p>` : ''}
-      ${ph === 'after' ? `<p class="lede">We made it home. <a href="#/faith/lookback">Look back at the weekend together →</a></p>` : ''}
-    </div>
-  </section>`;
+  const cover = `<section class="cover" aria-label="Fall Trip journal cover"><span class="spine"></span><span class="band"></span>
+    <div class="foil">${emblem()}<h1>Fall Trip</h1><div class="sub">AN EASTERN SIERRA FIELD JOURNAL</div>
+      <svg class="rule" viewBox="0 0 160 10" aria-hidden="true"><path d="M2 5h60M98 5h60" stroke="currentColor" stroke-width="1.2"/><path d="M80 1l4 4-4 4-4-4z" fill="currentColor"/></svg>
+      <div class="sub" style="letter-spacing:.12em">OCTOBER 9 – 11 · MMXXVI</div></div>
+    ${ph === 'before' ? `<div class="luggage" role="timer" aria-label="${c.d} days and ${c.h} hours until we leave"><div class="kicker" style="color:#6b3a1a">departs Friday, noon</div>
+      <div class="count">${c.d}<small> days</small> ${c.h}<small> hrs</small></div><span class="typed">${names ? 'EXPLORERS: ' + names.toUpperCase() : 'PROPERTY OF THE EXPLORERS'}</span></div>` : ''}
+    ${ph === 'after' ? `<div class="luggage"><div class="count" style="font-size:1.6rem">Welcome home</div><a class="typed" href="#/faith/lookback">look back together →</a></div>` : ''}
+    <div class="open-hint">open the journal ↓</div></section>`;
 
-  const today = ph === 'during' ? `<div class="page" style="padding-top:8px">${todayCard(t)}</div>` : '';
+  const today = ph === 'during' ? `<div class="page">${todaySlip(t)}</div>` : '';
 
-  const story = `<section class="story" aria-label="Our trip, as a story">
-    <div class="story-stage" aria-hidden="true"></div>
-    <div class="story-steps">
-      ${CHAPTERS.map((ch, i) => `<div class="story-step" data-i="${i}"><article class="card">
-        <div class="when">${esc(ch.when)}</div><h3>${esc(ch.title)}</h3><p>${esc(ch.text)}</p>
-        <a class="btn ghost small" href="${ch.link[0]}">${esc(ch.link[1])} →</a></article></div>`).join('')}
-    </div>
-  </section>`;
+  const story = `<section class="mapstory" aria-label="Our route, as a story"><div class="map-stage" aria-hidden="true"><div class="cartouche"><span class="hand">Our road to the gold</span><span class="typed">not to scale · east is up</span></div></div>
+    <div class="map-steps">${CHAPTERS.map((ch, i) => `<div class="map-step">${slip(`<span class="tape ${['', 't2', 't3'][i % 3]}"></span>
+      <img class="art vignette" src="img/art/${ch.art}.webp" alt="" loading="lazy"><div class="when">${esc(ch.when)}</div><h3>${esc(ch.title)}</h3><p>${esc(ch.text)}</p>
+      <a class="note-hand arrow" href="${ch.link[0]}">${esc(ch.link[1])}</a>`, { key: 'ch' + i })}</div>`).join('')}</div></section>`;
 
-  const end = `<div class="page story-end">
-    ${ph === 'before' ? '' : ''}
-    <div class="section"><h2>Jump in</h2>${quickLinks()}</div>
-    ${!standalone ? `<div class="card section"><h3>Keep it on your Home Screen</h3><p class="muted">Works with no signal in the canyons once it's installed.</p><a class="btn gold" href="#/install">${icons.share}How to install</a></div>` : ''}
-    ${!hasNames() ? `<div class="card section"><h3>Who's exploring?</h3><p class="muted">Add the kids' names so the hunt, reading turns, and journal know who's who. Names stay on this device only.</p><a class="btn" href="#/settings">${icons.gear}Add names</a></div>` : ''}
-    <p class="footer-note"><a href="#/about">About, credits & sources</a> · <a href="#/settings">Settings</a></p>
-  </div>`;
+  const contents = `<div class="page">
+    ${slip(`<div class="kicker">Contents</div><h2 style="margin-bottom:6px">In this journal</h2>
+      <ol class="toc">${TOC.map(([h, tt, d, n]) => `<li><a href="${h}"><span class="num">${n}.</span><span><span class="t">${esc(tt)}</span><span class="d">${esc(d)}${h === '#/kids/hunt' && found ? ` · ${found} found so far` : ''}</span></span><span class="dots"></span><span class="pg">${icons.back.replace('class="ico"', 'class="ico" style="transform:scaleX(-1)"')}</span></a></li>`).join('')}</ol>`, { key: 'toc', tape: 'corner-r' })}
+    ${!hasNames() ? slip(`<h3>Who’s exploring?</h3><p>Write the kids’ names in the front of the journal so the hunt, reading turns, and gratitude pages know who’s who. <span class="muted">Names stay on this device only.</span></p><a class="btn small" href="#/settings">${icons.gear}Write names</a>`, { cls: 'kraft', key: 'names' }) : ''}
+    ${!standalone ? slip(`<h3>Keep it in your pocket</h3><p>Add Fall Trip to the Home Screen so it opens with no signal in the canyons.</p><a class="btn gold small" href="#/install">${icons.share}How to install</a>`, { key: 'install' }) : ''}
+    <p class="footer-note"><a href="#/about">about, credits & sources</a> · <a href="#/settings">settings</a></p></div>`;
 
   return {
     title: '',
-    html: hero + today + story + end,
+    html: cover + today + story + contents,
     mount(root) {
-      const stops = [];
-      stops.push(leafFall(root.querySelector('.hero'), { count: 12 }));
-      stops.push(mountStory(root.querySelector('.story'), CHAPTERS));
-      const timer = setInterval(() => {
-        const p = countdownParts(new Date(DEPART).getTime() - now().getTime());
-        for (const k of ['d', 'h', 'm']) {
-          const el = root.querySelector(`[data-cd="${k}"]`);
-          if (el) el.textContent = p[k];
-        }
-      }, 30000);
-      return () => { stops.forEach((s) => s && s()); clearInterval(timer); };
+      const stops = [leafFall(root.querySelector('.cover'), { count: 10 }), mountStory(root, CHAPTERS)];
+      return () => stops.forEach((s) => s && s());
     },
   };
 }
