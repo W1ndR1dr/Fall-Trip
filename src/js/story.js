@@ -1,5 +1,5 @@
-// Home scrollytelling: the journal cover lifts open, then our route inks
-// itself across a hand-painted map as you scroll, stop by stop.
+// Home scrollytelling: the route draws itself across a hand-painted map as
+// you scroll, stop by stop, and the view pans to follow it.
 // All motion is JavaScript, tied to scroll; reduced motion snaps per chapter.
 import { reducedMotion } from './ui.js';
 
@@ -11,9 +11,9 @@ export const STOPS = {
 };
 const ROUTE = ['home', 'oakdale', 'groveland', 'craneflat', 'olmsted', 'tenaya', 'tuolumne', 'tioga', 'leevining', 'junelake', 'mammoth'];
 const LABELS = {
-  home: ['Home', 12, 16], oakdale: ['Oakdale · goats & apples', 12, 4], groveland: ['Groveland', 12, 4], craneflat: ['Crane Flat · last gas!', 12, 4],
+  home: ['Home', 12, 16], oakdale: ['Oakdale', 12, 4], groveland: ['Groveland', 12, 4], craneflat: ['Crane Flat · last gas', 12, 4],
   olmsted: ['Olmsted Pt.', -76, 4], tenaya: ['Tenaya Lake', 12, 6], tioga: ['Tioga Pass 9,945′', 12, 4], leevining: ['Lee Vining', 10, 18],
-  southtufa: ['South Tufa', 10, -6], lundy: ['Lundy beavers', -50, 30], junelake: ['June Lake', -18, -12], mammoth: ['Mammoth · home base', -52, 34], monolake: ['MONO LAKE', -60, -18],
+  southtufa: ['South Tufa', 10, -6], lundy: ['Lundy Canyon', -50, 30], junelake: ['June Lake', -18, -12], mammoth: ['Mammoth', -22, 30], monolake: ['MONO LAKE', -60, -18],
 };
 
 // Smooth path through points (Catmull-Rom → cubic Bézier), with a little
@@ -37,8 +37,8 @@ function overlaySVG() {
     const [x, y] = STOPS[k];
     const lake = k === 'monolake';
     return `<g class="stop" data-stop="${k}" opacity="0">
-      ${lake ? '' : `<circle cx="${x}" cy="${y}" r="4.2" fill="var(--page-c)" stroke="#4a3222" stroke-width="1.6"/>`}
-      <text x="${x + dx}" y="${y + dy}" font-family="${lake ? 'Fell SC, serif' : 'Kalam, cursive'}" font-size="${lake ? 13 : 12.5}" fill="#3b2a1c" ${lake ? 'letter-spacing="3"' : ''}>${txt}</text></g>`;
+      ${lake ? '' : `<circle cx="${x}" cy="${y}" r="4" fill="#fffcf6" stroke="#2a241d" stroke-width="1.5"/>`}
+      <text x="${x + dx}" y="${y + dy}" font-family="Instrument Sans, system-ui, sans-serif" font-weight="${lake ? 650 : 600}" font-size="${lake ? 9.5 : 10.5}" fill="#2a241d" stroke="#f5f0e6" stroke-width="3" paint-order="stroke" stroke-linejoin="round" ${lake ? 'letter-spacing="2.5"' : ''}>${txt}</text></g>`;
   }).join('');
   return `<svg class="map-ink" viewBox="0 0 400 760" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <image href="img/art/map-base.webp" x="0" y="0" width="400" height="760" style="mix-blend-mode:var(--art-blend)"/>
@@ -46,7 +46,7 @@ function overlaySVG() {
     <path class="route" d="${d}" fill="none" stroke="#a8461f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
     <path class="side" d="${side}" fill="none" stroke="#a8461f" stroke-width="1.8" stroke-dasharray="3 5" stroke-linecap="round" opacity="0"/>
     ${dots}
-    <g class="car" opacity="0"><circle r="9" fill="#fbf6ea" stroke="#4a3222" stroke-width="1.4"/><path d="M-5 2 l1.4 -4 h7.2 l1.4 4 z M-6 2 h12 v3 h-12 z" fill="#a8461f"/></g>
+    <g class="car" opacity="0"><circle r="9" fill="#fffcf6" stroke="#2a241d" stroke-width="1.2"/><path d="M-5 2 l1.4 -4 h7.2 l1.4 4 z M-6 2 h12 v3 h-12 z" fill="#a8461f"/></g>
   </svg>`;
 }
 
@@ -63,7 +63,7 @@ export const CHAPTER_ROUTE = {
 };
 
 export function mountStory(root, chapters) {
-  const stage = root.querySelector('.map-stage');
+  const stage = root.querySelector('.story-stage');
   stage.insertAdjacentHTML('beforeend', overlaySVG());
   const svg = stage.querySelector('svg.map-ink');
   const route = svg.querySelector('.route'), shadow = svg.querySelector('.route-shadow'), side = svg.querySelector('.side'), car = svg.querySelector('.car');
@@ -81,7 +81,7 @@ export function mountStory(root, chapters) {
     at[k] = len;
   }
   at.home = 0;
-  const steps = [...root.querySelectorAll('.map-step')];
+  const steps = [...root.querySelectorAll('.story-step')];
   const plans = chapters.map((c) => CHAPTER_ROUTE[c.route] || { to: 'home' });
 
   function render(pos) {
@@ -140,16 +140,6 @@ export function mountStory(root, chapters) {
     }
   }
 
-  // The cover lifts open like a book as the page scrolls.
-  const cover = root.querySelector('.cover');
-  function coverLift() {
-    if (!cover || reducedMotion()) return;
-    const h = cover.offsetHeight;
-    const k = Math.max(0, Math.min(1, window.scrollY / (h * 0.9)));
-    cover.style.transform = `perspective(1400px) rotateY(${(-k * 62).toFixed(2)}deg)`;
-    cover.style.opacity = (1 - Math.max(0, (k - 0.55) / 0.45) * 0.9).toFixed(3);
-  }
-
   // Phones: fill the screen (crop the edges). Wide screens: fit the whole
   // map on the left, cards on the right.
   let wide = false;
@@ -164,7 +154,7 @@ export function mountStory(root, chapters) {
   const onScroll = () => {
     if (ticking) return;
     ticking = true;
-    requestAnimationFrame(() => { coverLift(); measure(); });
+    requestAnimationFrame(measure);
   };
   window.addEventListener('scroll', onScroll, { passive: true });
   const onResize = () => { fit(); onScroll(); };
@@ -172,7 +162,6 @@ export function mountStory(root, chapters) {
   fit();
   render(0);
   measure();
-  coverLift();
   return () => {
     window.removeEventListener('scroll', onScroll);
     window.removeEventListener('resize', onResize);

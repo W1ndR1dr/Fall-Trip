@@ -1,29 +1,34 @@
 import * as store from '../store.js';
 import { checklist } from '../store.js';
 import { esc, haptic } from '../ui.js';
-import { ring, maybeStar, paperclip, drawOn } from '../hand.js';
+import { maybeStar, pop } from '../hand.js';
 import { menu, areas, colorReport, RETRIEVED } from '../content/trip.js';
 import { hunt } from '../content/kids.js';
-import { head, page, slip, tag, mapsBtn, art, icons, rerender } from './common.js';
+import { head, page, card, mapsBtn, icons, sectionTitle } from './common.js';
 
 const FILTERS = [
-  ['all', 'everything'], ['maybe', 'our maybes ★'], ['color', 'fall color'], ['animals', 'animals'], ['rocks', 'rocks & volcanoes'],
-  ['stars', 'stars'], ['crafts', 'crafts'], ['cozy', 'cozy'], ['easy', 'low energy'], ['food', 'food & cocoa'],
+  ['all', 'All'], ['maybe', 'Starred'], ['color', 'Fall color'], ['animals', 'Animals'], ['rocks', 'Rocks & volcanoes'],
+  ['stars', 'Stars'], ['crafts', 'Crafts'], ['cozy', 'Cozy'], ['easy', 'Low energy'], ['food', 'Food & coffee'],
 ];
-const energy = (n) => `<span class="energy" aria-label="effort ${n} of 3">${[1, 2, 3].map((i) => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span>`;
-const ART = { lundy: 'vig-aspens', southtufa: 'vig-tufa', conway: 'vig-aspens', olmsted: 'vig-granite', stars: 'vig-night', oakdalecheese: 'vig-orchard', bloomingcamp: 'vig-orchard', panum: 'spec-obsidian', obsidiandome: 'spec-obsidian', hotcreek: 'spec-granite', rmcf: 'spec-red', bookyjoint: 'spec-heart' };
+const effort = (n) => `<span class="effort" aria-label="Effort ${n} of 3">${[1, 2, 3].map((i) => `<i class="${i <= n ? 'on' : ''}"></i>`).join('')}</span>`;
+// A painting for activities that have one; wide scenes vs. single objects.
+const ART = { lundy: 'vig-aspens', southtufa: 'vig-tufa', conway: 'vig-aspens', olmsted: 'vig-granite', tenaya: 'vig-granite', stars: 'vig-night', oakdalecheese: 'vig-orchard', bloomingcamp: 'vig-orchard', sonsfarm: 'vig-orchard', panum: 'spec-obsidian', obsidiandome: 'spec-obsidian', hotcreek: 'spec-granite', quake: 'spec-granite', rmcf: 'spec-red', bookyjoint: 'spec-heart', convict: 'vig-tufa', juneloop: 'vig-aspens', leavesloop: 'spec-big', mcgee: 'spec-aspen', rockcreek: 'spec-birch', bishopcreek: 'spec-cottonwood', lakesbasin: 'spec-willow' };
+const picture = (id) => {
+  const a = ART[id];
+  if (!a) return '';
+  return `<div class="pic"><img class="art ${a.startsWith('vig') ? 'wide' : 'spec'}" src="img/art/${a}.webp" alt="" loading="lazy"></div>`;
+};
 
-function card(a, maybes) {
+function activityCard(a, maybes) {
   const on = maybes.has(a.id);
-  const pic = ART[a.id];
-  return slip(`${paperclip()}
-    <div class="card-head"><h3><a href="#/do/${a.id}">${esc(a.name)}</a></h3>
-      <button class="maybe" type="button" data-maybe="${a.id}" aria-pressed="${on}" aria-label="${on ? 'On' : 'Add to'} our maybe list">${maybeStar(on)}</button></div>
-    ${pic ? `<img class="art" src="img/art/${pic}.webp" alt="" loading="lazy" style="width:${pic.startsWith('vig') ? '100%' : '90px'};margin:4px auto 2px">` : ''}
-    <p>${esc(a.text)}</p>
-    <div class="tags">${tag(a.time)}${a.kind === 'food' ? '' : `<span class="tag ink">effort ${energy(a.energy)}</span>`}${a.status && /⚠/.test(a.status) ? tag('heads up', 'warn') : ''}</div>
-    ${a.hours ? `<p class="typed small muted">${esc(a.hours)}</p>` : ''}
-    <div class="actions">${mapsBtn(a.maps, 'Maps')}<a class="btn line small" href="#/do/${a.id}">Details</a></div>`, { cls: 'ruled-card', key: 'act-' + a.id });
+  const pic = picture(a.id);
+  return `<article class="card ${pic ? 'media' : ''}">
+    <button class="maybe" type="button" data-maybe="${a.id}" aria-pressed="${on}" aria-label="${on ? 'Starred' : 'Star'} ${esc(a.name)}">${maybeStar(on)}</button>
+    ${pic}<div class="${pic ? 'body' : ''}"><h3 style="padding-right:44px"><a href="#/do/${a.id}" style="text-decoration:none">${esc(a.name)}</a></h3>
+    <p class="muted">${esc(a.text)}</p>
+    <div class="meta"><span>${icons.clock}${esc(a.time)}</span>${a.kind === 'food' ? '' : `<span>Effort ${effort(a.energy)}</span>`}${a.status && /⚠/.test(a.status) ? `<span class="flag">Check first</span>` : ''}</div>
+    ${a.hours ? `<p class="small" style="margin-top:8px">${esc(a.hours)}</p>` : ''}
+    <div class="actions">${mapsBtn(a.maps, 'Maps')}<a class="btn small soft" href="#/do/${a.id}">Details</a></div></div></article>`;
 }
 
 export function explore(filter) {
@@ -33,23 +38,21 @@ export function explore(filter) {
   const list = menu.filter(match);
   const groups = Object.keys(areas).map((k) => ({ k, items: list.filter((a) => a.area === k) })).filter((g) => g.items.length);
   return {
-    title: 'Adventures',
+    title: 'Activities',
     keepScroll: true,
-    html: page(`${head('Adventures', { section: 'III · adventures', folio: '10', lede: 'Nothing here is required. Star what sounds fun, then choose by mood, energy, and weather.' })}
-      <div class="circle-pick" role="group" aria-label="Show">${FILTERS.map(([k, l], i) => `<button type="button" data-f="${k}" aria-pressed="${k === f}">${esc(l)}${k === f ? ring(i + 3) : ''}</button>`).join('')}</div>
-      <div class="btn-row" style="margin:14px 0 6px"><a class="btn small gold" href="#/color">${icons.leaf}Where the gold is</a><a class="btn line small" href="#/food">${icons.cup}Food & cocoa</a></div>
-      ${groups.length ? groups.map((g) => `<section class="section"><div class="section-h"><h2>${esc(areas[g.k].name)}</h2></div>
-        <p class="note-hand" style="margin:-4px 0 12px">${esc(areas[g.k].drive)}</p>
-        <div class="cards">${g.items.map((a) => card(a, maybes)).join('')}</div></section>`).join('')
-        : slip(`<p class="hand" style="font-size:1.3rem">No stars yet. Tap ☆ on anything that sounds fun.</p>`, { key: 'empty' })}`),
+    html: page(`${head('Activities', { lede: 'None of these are required. Star the ones that sound good and decide on the day.' })}
+      <div class="pills" role="group" aria-label="Filter">${FILTERS.map(([k, l]) => `<button type="button" data-f="${k}" aria-pressed="${k === f}">${esc(l)}</button>`).join('')}</div>
+      <div class="btn-row" style="margin-top:6px"><a class="btn small secondary" href="#/color">${icons.leaf}Color report</a><a class="btn small secondary" href="#/food">${icons.cup}Food & coffee</a></div>
+      ${groups.length ? groups.map((g) => `<section class="section">${sectionTitle(areas[g.k].name, areas[g.k].drive)}
+        <div class="grid cols">${g.items.map((a) => activityCard(a, maybes)).join('')}</div></section>`).join('')
+        : `<div class="section">${card('<p>Nothing starred yet. Tap the star on anything that sounds good.</p>', 'tint')}</div>`}`),
     mount(root) {
-      root.querySelectorAll('.circle-pick svg.ring').forEach((s) => drawOn(s, { ms: 500 }));
       root.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => { store.set('exploreFilter', b.dataset.f); location.hash = '#/explore/' + b.dataset.f; }));
       root.querySelectorAll('[data-maybe]').forEach((b) => b.addEventListener('click', () => {
         const on = maybes.toggle(b.dataset.maybe);
         b.setAttribute('aria-pressed', on);
         b.innerHTML = maybeStar(on);
-        if (on) drawOn(b.querySelector('svg'), { ms: 450 });
+        if (on) pop(b);
         haptic();
       }));
     },
@@ -61,49 +64,45 @@ export function activityView(id) {
   if (!a) return explore();
   const maybes = checklist('maybes');
   const finds = (a.hunt || []).map((h) => hunt.find((x) => x.id === h)).filter(Boolean);
-  const rows = [['time', a.time], ['walk', a.walk], ['bathrooms', a.wc], ['fee', a.fee], ['hours', a.hours], ['status', a.status]].filter(([, v]) => v);
-  const pic = ART[a.id];
+  const rows = [['Time', a.time], ['Walk', a.walk], ['Restrooms', a.wc], ['Fee', a.fee], ['Hours', a.hours], ['Status', a.status]].filter(([, v]) => v);
+  const art = ART[a.id];
   return {
     title: a.name,
-    html: page(`${head(a.name, { back: '#/explore', section: areas[a.area].name })}
-      ${slip(`${pic ? `<img class="art" src="img/art/${pic}.webp" alt="" style="width:100%;max-width:420px;margin:0 auto 8px">` : ''}
-        <p style="font-size:1.12rem">${esc(a.text)}</p>
-        <dl class="facts">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}${a.kind === 'food' ? '' : `<dt>effort</dt><dd>${energy(a.energy)}</dd>`}</dl>
-        <div class="actions">${mapsBtn(a.maps, 'Open in Maps', 'btn')}
-          <button class="btn line" type="button" data-maybe aria-pressed="${maybes.has(a.id)}"><span>${maybes.has(a.id) ? '★ on our maybe list' : '☆ add to maybes'}</span></button></div>`, { key: 'act-d-' + a.id, tape: 'corner-l' })}
-      ${finds.length ? slip(`<div class="kicker">Leaf-hunt treasures here</div><div class="tags">${finds.map((h) => `<a class="tag" href="#/kids/hunt">${esc(h.name)}</a>`).join('')}</div>`, { cls: 'kraft', key: 'finds' + a.id }) : ''}
-      <p class="note-hand">Details checked ${esc(RETRIEVED)}. Hours change, so call ahead when it matters.</p>`),
+    html: page(`${head(a.name, { back: '#/explore', eyebrow: areas[a.area].name })}
+      ${art ? `<img class="art" src="img/art/${art}.webp" alt="" style="width:${art.startsWith('vig') ? '100%' : '160px'};max-width:560px;margin:0 auto 18px;border-radius:14px">` : ''}
+      <p class="read">${esc(a.text)}</p>
+      ${card(`<dl class="facts">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}${a.kind === 'food' ? '' : `<dt>Effort</dt><dd>${effort(a.energy)}</dd>`}</dl>`)}
+      <div class="btn-row">${mapsBtn(a.maps, 'Open in Maps', 'btn')}
+        <button class="btn secondary" type="button" data-maybe aria-pressed="${maybes.has(a.id)}">${maybeStar(maybes.has(a.id)).replace('<svg', '<svg class="ico"')}<span>${maybes.has(a.id) ? 'Starred' : 'Star'}</span></button></div>
+      ${finds.length ? `<div class="section">${card(`<span class="eyebrow">Leaf hunt</span><p>Look for: ${finds.map((h) => `<a href="#/kids/hunt">${esc(h.name)}</a>`).join(', ')}.</p>`, 'tint')}</div>` : ''}
+      <p class="small faint" style="margin-top:18px">Checked ${esc(RETRIEVED)}. Hours change; call ahead when it matters.</p>`),
     mount(root) {
       const b = root.querySelector('[data-maybe]');
       b.addEventListener('click', () => {
         const on = maybes.toggle(a.id);
         b.setAttribute('aria-pressed', on);
-        b.querySelector('span').textContent = on ? '★ on our maybe list' : '☆ add to maybes';
+        b.innerHTML = `${maybeStar(on).replace('<svg', '<svg class="ico"')}<span>${on ? 'Starred' : 'Star'}</span>`;
         haptic();
       });
     },
   };
 }
 
-// Paint chips: Just starting → Patchy → Near peak → Peak → Past
-const CHIPS = ['#8da65a', '#c7c04e', '#f2c14e', '#e58a2b', '#9c6a4a'];
+// Colors for Just starting → Patchy → Near peak → Peak → Past.
+const STAGES = ['#8da65a', '#c7c04e', '#e9b93f', '#e0822e', '#9c6a4a'];
 export function colorView() {
   const r = colorReport;
   return {
-    title: 'Where the gold is',
-    html: page(`${head('Where the Gold Is', { back: '#/explore', section: 'VI · color report', folio: '18', lede: r.summary })}
-      <p class="typed small muted">RETRIEVED ${esc(r.retrieved)} · ${esc(r.asOf.toUpperCase())}</p>
-      <div class="cards section">${r.spots.map((s) => {
-        const lv = s.level; // 1..5
-        return slip(`<div style="display:flex;gap:12px;align-items:baseline"><span class="rank">${s.rank}</span><div><h3>${esc(s.name)}</h3><span class="typed small muted">${s.elev.toLocaleString()} FT</span></div></div>
-          <div class="chip-row" role="img" aria-label="Projected: ${esc(s.proj)}">${CHIPS.map((c, i) => `<i style="background:${c}" class="${Math.abs(i + 1 - lv) <= 0.5 ? 'on' : Math.abs(i + 1 - lv) <= 1 ? 'half' : ''}"></i>`).join('')}</div>
-          <div class="chip-legend"><span>start</span><span>patchy</span><span>near</span><span>peak</span><span>past</span></div>
-          <p class="small" style="margin-top:8px"><b>Latest:</b> ${esc(s.now)}</p>
-          <p class="note-hand">Oct 9–11: ${esc(s.proj)}</p>
-          <div class="tags">${s.warn ? tag(s.warn, 'warn') : ''}${s.far ? tag('far from base', 'ink') : ''}</div>`, { key: 'c' + s.rank });
-      }).join('')}</div>
-      ${slip(`<div class="kicker">Recheck live</div><ul class="toc">${r.links.map((l) => `<li><a href="${l.url}" target="_blank" rel="noopener"><span class="t" style="font-size:1.08rem">${esc(l.name)}</span><span class="dots"></span><span class="pg">${icons.ext}</span></a></li>`).join('')}</ul>
-        <p class="note-hand">Projections are mine, from the Sep 23–25 reports plus 2024–25 timing. Mono County updates Wednesdays; CaliforniaFallColor posts Fridays.</p>`, { key: 'recheck', cls: 'kraft' })}`),
+    title: 'Color report',
+    html: page(`${head('Color report', { back: '#/explore', eyebrow: `Updated ${r.retrieved}`, lede: r.summary })}
+      <p class="small muted">${esc(r.asOf)}. Projections for Oct 9–11 are mine, based on those reports and the 2024–2025 timing.</p>
+      <div class="grid cols section" style="margin-top:20px">${r.spots.map((s) => card(`<div style="display:flex;gap:12px;align-items:flex-start"><span class="rank">${s.rank}</span>
+        <div><h3>${esc(s.name)}</h3><span class="small faint">${s.elev.toLocaleString()} ft</span></div></div>
+        <div class="scale" role="img" aria-label="Projected for our weekend: ${esc(s.proj)}">${STAGES.map((c, i) => `<i style="background:${c}" class="${Math.abs(i + 1 - s.level) <= 0.5 ? 'on' : ''}"></i>`).join('')}</div>
+        <div class="scale-legend"><span>Start</span><span>Patchy</span><span>Near</span><span>Peak</span><span>Past</span></div>
+        <dl class="facts" style="margin-top:12px"><dt>Latest</dt><dd>${esc(s.now)}</dd><dt>Oct 9–11</dt><dd>${esc(s.proj)}</dd></dl>
+        ${s.warn || s.far ? `<div class="meta">${s.warn ? `<span class="flag">${esc(s.warn)}</span>` : ''}${s.far ? '<span>Far from Mammoth</span>' : ''}</div>` : ''}`)).join('')}</div>
+      <div class="section">${card(`<span class="eyebrow">Latest reports</span><ul class="linklist">${r.links.map((l) => `<li><a href="${l.url}" target="_blank" rel="noopener"><span class="t">${esc(l.name)}</span>${icons.ext}</a></li>`).join('')}</ul>`)}</div>`),
   };
 }
 
@@ -111,10 +110,10 @@ export function foodView() {
   const food = menu.filter((m) => m.kind === 'food');
   const groups = Object.keys(areas).map((k) => ({ k, items: food.filter((a) => a.area === k) })).filter((g) => g.items.length);
   return {
-    title: 'Food & cocoa',
-    html: page(`${head('Food & Cocoa', { back: '#/explore', section: 'III · adventures', folio: '14', lede: 'October hours, checked ' + RETRIEVED + '.' })}
-      ${slip(`<p class="note-hand" style="font-size:1.12rem">Closed or changed: Ohanas 395 has closed for good · Carson Peak Inn is temporarily closed · Base Camp Café looks closed · Tuolumne’s grill and store are shut for the season · Whoa Nellie Deli’s last day is uncertain.</p>`, { cls: 'kraft', key: 'closed', tape: 't3' })}
-      ${groups.map((g) => `<section class="section"><div class="section-h"><h2>${esc(areas[g.k].name)}</h2></div><div class="cards">${g.items.map((a) => slip(`<h3>${esc(a.name)}</h3><p>${esc(a.text)}</p><p class="typed small muted">${esc(a.hours || '')}</p><div class="actions">${mapsBtn(a.maps, 'Maps')}</div>`, { key: 'f' + a.id })).join('')}</div></section>`).join('')}
-      ${slip(`<h3>Recipes for the lodging kitchen</h3><p>Hot cocoa, spiced cider, caramel apples, and fire-safe s’mores.</p><a class="btn small" href="#/kids/cozy">${icons.cup}The cozy kitchen</a>`, { key: 'recipes-link' })}`),
+    title: 'Food & coffee',
+    html: page(`${head('Food & coffee', { back: '#/explore', lede: 'October hours, checked ' + RETRIEVED + '.' })}
+      ${card(`<span class="eyebrow">Closed or changed</span><p>Ohanas 395 in June Lake has closed. Carson Peak Inn is temporarily closed. Base Camp Café appears closed. The Tuolumne Meadows store and grill are closed for the season. Whoa Nellie Deli's closing date is unconfirmed.</p>`, 'tint')}
+      ${groups.map((g) => `<section class="section">${sectionTitle(areas[g.k].name)}<div class="grid cols">${g.items.map((a) => card(`<h3>${esc(a.name)}</h3><p class="muted">${esc(a.text)}</p><p class="small"><b>Hours</b> · ${esc(a.hours || '')}</p><div class="actions">${mapsBtn(a.maps, 'Maps')}</div>`)).join('')}</div></section>`).join('')}
+      <div class="section">${card(`<h3>Recipes</h3><p class="muted">Hot cocoa, spiced cider, caramel apples, and s’mores without a campfire.</p><div class="actions"><a class="btn small" href="#/kids/cozy">${icons.cup}Recipes</a></div>`)}</div>`),
   };
 }

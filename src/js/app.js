@@ -12,7 +12,7 @@ import { settingsView, aboutView, installView } from './views/more.js';
 const TABS = [
   { href: '#/', label: 'Today', icon: 'today', match: /^\/$/ },
   { href: '#/plan', label: 'Plan', icon: 'plan', match: /^\/(plan|pack|before|route)/ },
-  { href: '#/explore', label: 'Explore', icon: 'explore', match: /^\/(explore|color|food|do)/ },
+  { href: '#/explore', label: 'Activities', icon: 'explore', match: /^\/(explore|color|food|do)/ },
   { href: '#/kids', label: 'Kids', icon: 'kids', match: /^\/kids/ },
   { href: '#/faith', label: 'Devotions', icon: 'book', match: /^\/faith/ },
 ];
@@ -115,7 +115,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     try {
       const reg = await navigator.serviceWorker.register('./sw.js');
       const prompt = (w) => {
-        toast('A fresh version is ready. Tap to update.', 8000);
+        toast('Update available. Tap to reload.', 8000);
         const t = $('#toast');
         t.style.pointerEvents = 'auto';
         t.onclick = () => { w.postMessage('skipWaiting'); };
@@ -125,7 +125,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
         const w = reg.installing;
         w && w.addEventListener('statechange', () => {
           if (w.state === 'installed' && navigator.serviceWorker.controller) prompt(w);
-          if (w.state === 'installed' && !navigator.serviceWorker.controller) toast('Saved for offline. Works with no signal now.');
+          if (w.state === 'installed' && !navigator.serviceWorker.controller) toast('Saved for offline use');
         });
       });
       // Reload only when an update replaces an existing worker, not on the

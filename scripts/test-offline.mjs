@@ -33,7 +33,7 @@ for (const r of routes) {
   await page.goto(base + '#' + r).catch((e) => errors.push(`${r}: ${e.message}`));
   await page.waitForTimeout(150);
   const h1 = await page.evaluate(() => (document.querySelector('main h1') || {}).textContent || '');
-  const fonts = await page.evaluate(async () => { await document.fonts.ready; return document.fonts.check('16px Alegreya') && document.fonts.check('16px Fell') && document.fonts.check('16px Kalam'); });
+  const fonts = await page.evaluate(async () => { await document.fonts.ready; return document.fonts.check('16px "Instrument Sans"') && document.fonts.check('16px "Instrument Serif"') && document.fonts.check('16px Newsreader'); });
   if (!h1.trim() && r !== '/') { failures++; console.log('BLANK', r); }
   // Every image on the page must be servable offline (from the SW cache),
   // including lazy ones that haven't scrolled into view yet.
@@ -48,9 +48,9 @@ for (const r of routes) {
 }
 // Offline persistence: check a hunt item and journal survive a reload.
 await page.goto(base + '#/kids/hunt');
-await page.click('.specimen[data-id="aspen"]');
+await page.click('.find[data-id="aspen"]');
 await page.reload();
-const kept = await page.getAttribute('.specimen[data-id="aspen"]', 'aria-pressed');
+const kept = await page.getAttribute('.find[data-id="aspen"]', 'aria-pressed');
 if (kept !== 'true') { failures++; console.log('STATE NOT PERSISTED'); }
 await ctx.setOffline(false);
 await browser.close();

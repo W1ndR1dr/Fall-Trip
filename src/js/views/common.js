@@ -1,27 +1,23 @@
 import * as store from '../store.js';
 import { esc, kids, mapsUrl } from '../ui.js';
-import { doodles, flourish } from '../hand.js';
+import { doodles } from '../hand.js';
 import { passages } from '../content/scripture.js';
 import { daily, moments, bonus } from '../content/devotions.js';
 
 export const icons = doodles;
 export const art = (name, alt = '', cls = 'art') => `<img class="${cls}" src="img/art/${name}.webp" alt="${esc(alt)}" loading="lazy" decoding="async">`;
 
-// Journal page chrome: a typed folio line (back link · section · page no.)
-// and a title block with a hand-inked flourish.
-export function head(title, { back = '', section = '', folio = '', lede = '' } = {}) {
-  return `<div class="folio">${back ? `<a href="${back}" aria-label="Back">${doodles.back}<span>back</span></a>` : `<span>${esc(section)}</span>`}
-    <span>${back ? esc(section) : ''}</span><span>${folio ? `p. ${esc(folio)}` : ''}</span></div>
-  <header class="title-block"><h1>${esc(title)}</h1>${flourish()}${lede ? `<p class="lede">${esc(lede)}</p>` : ''}</header>`;
+// Page header: optional back link, small eyebrow, title, and lede.
+export function head(title, { back = '', eyebrow = '', lede = '' } = {}) {
+  return `${back ? `<nav class="topbar"><a class="back" href="${back}">${doodles.back}<span>Back</span></a></nav>` : ''}
+  <header class="page-head">${eyebrow ? `<span class="eyebrow">${esc(eyebrow)}</span>` : ''}<h1>${esc(title)}</h1>${lede ? `<p class="lede">${esc(lede)}</p>` : ''}</header>`;
 }
 
 export const page = (inner, cls = '') => `<div class="page ${cls}">${inner}</div>`;
-export const slip = (inner, { cls = '', key = '', tape = '' } = {}) =>
-  `<div class="slip ${cls}" ${key ? `data-key="${esc(key)}"` : ''}>${tape ? `<span class="tape ${tape}"></span>` : ''}${inner}</div>`;
-export const tag = (txt, cls = '') => `<span class="tag ${cls}">${esc(txt)}</span>`;
-export const sectionH = (t) => `<div class="section-h"><h2>${esc(t)}</h2></div>`;
+export const card = (inner, cls = '') => `<div class="card ${cls}">${inner}</div>`;
+export const sectionTitle = (t, note = '') => `<div class="section-title"><h2>${esc(t)}</h2>${note ? `<span class="note">${esc(note)}</span>` : ''}</div>`;
 
-export function mapsBtn(maps, label = 'Open in Maps', cls = 'btn small') {
+export function mapsBtn(maps, label = 'Open in Maps', cls = 'btn small secondary') {
   if (!maps) return '';
   return `<a class="${cls}" href="${mapsUrl(maps)}" target="_blank" rel="noopener">${doodles.map}<span>${label}</span></a>`;
 }
@@ -36,12 +32,12 @@ export function passageHTML(ref) {
   const text = tr === 'NIV' ? p.niv : p.esv;
   const url = tr === 'NIV' ? p.nivUrl : p.esvUrl;
   return `<blockquote class="verse" data-ref="${esc(ref)}">${esc(text)}
-  <span class="ref">${esc(ref)} (${tr}) · <a href="${url}" target="_blank" rel="noopener">open in the Bible app</a></span></blockquote>`;
+  <span class="ref"><span>${esc(ref)} · ${tr}</span><a href="${url}" target="_blank" rel="noopener">Open in Bible app</a></span></blockquote>`;
 }
 
 export function translationToggle() {
   const tr = translation();
-  return `<div class="tabs-kraft" role="group" aria-label="Bible translation">
+  return `<div class="segmented" role="group" aria-label="Bible translation">
     <button type="button" data-tr="ESV" aria-pressed="${tr === 'ESV'}">ESV</button>
     <button type="button" data-tr="NIV" aria-pressed="${tr === 'NIV'}">NIV</button></div>`;
 }

@@ -264,6 +264,38 @@ function aspens(seed = 79) {
 }
 add('vig-aspens', aspens());
 
+// Hero: a wide, unhurried aspen scene with snowy peaks behind.
+function hero(seed = 131) {
+  const W = 600, H = 400;
+  const r = rng(seed);
+  let crowns = '', trunks = '', trunkInk = '', eyes = '';
+  const cols = ['#f6c945', '#f0b43c', '#e89a34', '#f5d35c', '#e0822e', '#f2bf3f'];
+  for (let i = 0; i < 17; i++) {
+    const x = 14 + i * 36 + r() * 14, top = 150 + r() * 70 + (i % 3) * 8, h = H - top;
+    crowns += wash(blob(x, top + 22, 20 + r() * 9, 40 + r() * 14, { lumps: 8, amp: 0.2, seed: seed + i }), cols[i % cols.length], { opacity: 0.82, layers: 2, seed: seed + 50 + i });
+    trunks += `M${x - 3.4} ${top + 50} L${x - 4} ${H + 4} L${x + 4} ${H + 4} L${x + 3.4} ${top + 50} Z `;
+    trunkInk += `M${x - 3.4} ${top + 50} L${x - 4} ${H + 4} M${x + 3.4} ${top + 54} L${x + 4} ${H + 4} `;
+    for (let k = 0; k < 3; k++) eyes += `M${x - 2.5} ${top + 84 + k * 44 + r() * 12} h5 `;
+  }
+  const vig = `<mask id="hv"><rect width="${W}" height="${H}" fill="black"/><path d="M-20 -20 H${W + 20} V${H - 30} C${W * 0.7} ${H + 10} ${W * 0.3} ${H - 10} -20 ${H}Z" fill="white" filter="url(#bloom)"/></mask>`;
+  return svgDoc(W, H, `<g mask="url(#hv)">
+    ${bloom(`M-30 -30 H${W + 30} V250 H-30Z`, '#a9cde3', 0.7)}
+    ${bloom(`M-30 120 H${W + 30} V230 H-30Z`, '#f6dcaa', 0.45)}
+    ${pencil('M0 190 L70 120 L120 150 L190 80 L250 130 L320 70 L390 128 L450 96 L520 140 L600 104')}
+    ${wash('M0 190 L70 120 L120 150 L190 80 L250 130 L320 70 L390 128 L450 96 L520 140 L600 104 V260 H0Z', '#a4a2c2', { opacity: 0.55, seed: seed + 1 })}
+    ${wash('M170 96 L190 80 L210 98 L200 94 L190 104 L180 94Z M300 86 L320 70 L340 88 L330 84 L320 94 L310 84Z', '#fbf8f0', { opacity: 0.95, layers: 1, seed: seed + 2 })}
+    ${ink('M0 190 L70 120 L120 150 L190 80 L250 130 L320 70 L390 128 L450 96 L520 140 L600 104', { w: 0.9, opacity: 0.45, breaks: false })}
+    ${wash(`M-10 290 C150 276 300 296 450 282 C520 276 580 286 ${W + 10} 282 V${H + 10} H-10Z`, '#b9a55a', { opacity: 0.65, seed: seed + 3 })}
+    ${wash(trunks, '#f3efe6', { opacity: 1, layers: 1, seed: seed + 4 })}
+    ${ink(trunkInk, { w: 0.7, opacity: 0.5, breaks: false })}
+    ${ink(eyes, { w: 1.7, opacity: 0.7, breaks: false })}
+    ${crowns}
+    ${spatter(120, 110, '#f2b233', { seed: seed + 5, n: 14, spread: 60 })}
+    ${spatter(470, 140, '#e58a2b', { seed: seed + 6, n: 12, spread: 50 })}
+  </g>`, seed, vig);
+}
+add('hero', hero(), 3);
+
 function night(seed = 83) {
   const r = rng(seed);
   let stars = '';

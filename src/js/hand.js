@@ -14,30 +14,8 @@ export function rng(seed) {
   return () => ((s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296);
 }
 
-// A deckled clip-path polygon: small torn jitter all around, size-independent.
-export function deckle(seed, { amp = 1.8, step = 22, notch = 0.06 } = {}) {
-  const r = rng(seed);
-  const pts = [];
-  const j = () => (r() * amp * (r() < notch ? 2.6 : 1)).toFixed(1);
-  const n = step;
-  for (let i = 0; i <= n; i++) pts.push(`${(100 * i / n).toFixed(2)}% ${j()}px`);
-  for (let i = 1; i <= n; i++) pts.push(`calc(100% - ${j()}px) ${(100 * i / n).toFixed(2)}%`);
-  for (let i = n - 1; i >= 0; i--) pts.push(`${(100 * i / n).toFixed(2)}% calc(100% - ${j()}px)`);
-  for (let i = n - 1; i >= 1; i--) pts.push(`${j()}px ${(100 * i / n).toFixed(2)}%`);
-  return `polygon(${pts.join(',')})`;
-}
-
-// Decorate slips and specimens inside root: edges + gentle tilt.
+// Run ink draw-on animations for any [data-draw] SVG inside root.
 export function decorate(root) {
-  root.querySelectorAll('.slip, .specimen').forEach((el, i) => {
-    const key = el.dataset.key || el.textContent.slice(0, 40) + i;
-    const seed = hash(key);
-    el.style.setProperty('--deckle', deckle(seed));
-    if (!el.classList.contains('no-tilt') && !el.closest('.log')) {
-      const t = (rng(seed + 1)() - 0.5) * 1.3;
-      el.style.setProperty('--tilt', t.toFixed(2) + 'deg');
-    }
-  });
   root.querySelectorAll('[data-draw]').forEach((el) => drawOn(el));
 }
 
@@ -74,35 +52,32 @@ export function inkProgress(path, k) {
   path.style.strokeDashoffset = (L * (1 - Math.max(0, Math.min(1, k)))).toFixed(1);
 }
 
-// A rubber stamp coming down: big and light → thunk → settle, with a wobble.
-export function thunk(el, { rot = -8 } = {}) {
-  if (!el) return;
-  if (reducedMotion()) { el.style.opacity = '.9'; return; }
-  const t0 = performance.now();
-  const ms = 420;
-  const step = (t) => {
-    const k = Math.min(1, (t - t0) / ms);
-    let s, o;
-    if (k < 0.55) { const a = k / 0.55; s = 1.8 - 0.86 * a * a; o = 0.15 + 0.85 * a; }
-    else { const a = (k - 0.55) / 0.45; s = 0.94 + 0.06 * Math.sin(a * Math.PI * 0.5); o = 1 - 0.1 * a; }
-    el.style.transform = `scale(${s.toFixed(3)}) rotate(${(rot + (1 - k) * 6).toFixed(2)}deg)`;
-    el.style.opacity = o.toFixed(2);
-    if (k < 1) requestAnimationFrame(step);
-  };
-  requestAnimationFrame(step);
-}
-
-// Press a specimen in: the painting drops and settles, then tape appears.
-export function pressIn(img, tape) {
+// A found painting blooms into color: scale + fade from gray, in JS.
+export function bloomIn(img) {
   if (reducedMotion() || !img) return;
   const t0 = performance.now();
   const step = (t) => {
     const k = Math.min(1, (t - t0) / 520);
     const e = 1 - Math.pow(1 - k, 3);
-    img.style.transform = `translateY(${(-26 * (1 - e)).toFixed(1)}px) rotate(${(-12 * (1 - e)).toFixed(1)}deg) scale(${(1.15 - 0.15 * e).toFixed(3)})`;
-    if (tape) tape.style.opacity = k > 0.6 ? ((k - 0.6) / 0.4).toFixed(2) : '0';
+    img.style.transform = `scale(${(0.82 + 0.18 * e + Math.sin(k * Math.PI) * 0.06).toFixed(3)}) rotate(${(-6 * (1 - e)).toFixed(2)}deg)`;
+    img.style.filter = `grayscale(${(1 - e).toFixed(2)})`;
+    img.style.opacity = (0.3 + 0.7 * e).toFixed(2);
     if (k < 1) requestAnimationFrame(step);
-    else { img.style.transform = ''; if (tape) tape.style.opacity = ''; }
+    else { img.style.transform = ''; img.style.filter = ''; img.style.opacity = ''; }
+  };
+  requestAnimationFrame(step);
+}
+
+// Pop a small element (e.g., a check badge) with a springy scale.
+export function pop(el) {
+  if (reducedMotion() || !el) return;
+  const t0 = performance.now();
+  const step = (t) => {
+    const k = Math.min(1, (t - t0) / 380);
+    const s = 1 + Math.sin(k * Math.PI) * 0.35 * (1 - k * 0.4);
+    el.style.transform = `scale(${s.toFixed(3)})`;
+    if (k < 1) requestAnimationFrame(step);
+    else el.style.transform = '';
   };
   requestAnimationFrame(step);
 }
@@ -145,43 +120,9 @@ export const doodles = {
   speaker: D('<path d="M5 12.6v6.9h4.8l6 4.7V7.7l-6 4.9z"/><path d="M20.2 12.2c2 2.1 2.1 5.4 0 7.6"/>'),
   pin: D('<path d="M16 28.2c-4.2-5.4-8.5-10-8.4-15.3.1-4.6 3.8-8.2 8.4-8.1 4.6 0 8.3 3.7 8.3 8.3.1 5.3-4.2 9.8-8.3 15.1z"/><path d="M16 9.6c1.9 0 3.4 1.5 3.4 3.4a3.4 3.4 0 0 1-6.8 0c0-1.9 1.5-3.4 3.4-3.4z"/>'),
 };
-// Log markers: a hand-inked circle (flexible) and a filled seal (anchor).
-export const logDot = (anchor) => anchor
-  ? `<svg class="dot" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 2.4c4.3-.2 7.6 3.3 7.6 7.6 0 4.2-3.4 7.6-7.7 7.6-4.2 0-7.5-3.4-7.5-7.6C2.4 5.8 5.8 2.5 10 2.4z" fill="currentColor" opacity=".9"/><path d="M6.4 10.3 9 12.8l4.6-5.6" stroke="#fbf6ea" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`
-  : `<svg class="dot" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3c3.9-.1 7 3.1 6.9 7 .1 3.8-3.1 7-7 6.9-3.8 0-6.9-3.2-6.8-7C3.2 6 6.2 3 10 3z" fill="var(--page-c)" stroke="currentColor" stroke-width="1.6"/></svg>`;
-
-// Hand-drawn flourish under titles (drawn in by drawOn).
-export const flourish = () =>
-  `<svg class="flourish" viewBox="0 0 190 14" data-draw aria-hidden="true"><path d="M2 8c20-5 40 3 62-1 16-3 26-6 40-2 12 3 18 6 30 3 14-4 30-6 54 0" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M92 5c3-4 7-4 9 0-2 4-6 4-9 0z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>`;
-
-// Pencil ring drawn around a chosen word.
-export const ring = (seed = 1) => {
-  const r = rng(seed);
-  const w = () => (r() - 0.5) * 4;
-  return `<svg class="ring" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true"><path d="M${8 + w()} ${22 + w()} C${6 + w()} ${6 + w()} ${50 + w()} ${2 + w()} ${86 + w()} ${8 + w()} C${100 + w()} ${14 + w()} ${96 + w()} ${34 + w()} ${60 + w()} ${37 + w()} C${26 + w()} ${40 + w()} ${2 + w()} ${32 + w()} ${12 + w()} ${12 + w()} C${16 + w()} ${7 + w()} ${22 + w()} ${5 + w()} ${30 + w()} ${4 + w()}" fill="none" stroke="var(--rust)" stroke-width="2" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
-};
-
 // Hand-drawn star for "maybe", outline or filled.
 export const maybeStar = (on) =>
-  `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.8c1.2 3.4 2.3 6.6 3.4 9.2 3.2.1 6.2.2 9.1.4-2.4 2-4.8 3.8-7.3 5.7 1 3.1 1.8 6.3 2.8 9.4-2.6-1.9-5.3-3.8-8.1-5.6-2.6 1.9-5.3 3.8-7.9 5.6 1-3.1 2-6.2 2.9-9.3-2.4-1.9-4.8-3.7-7.2-5.6 3 0 6-.2 9-.3 1.1-3.2 2.2-6.3 3.3-9.5z" fill="${on ? 'var(--gold-wash)' : 'none'}" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
+  `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.8c1.2 3.4 2.3 6.6 3.4 9.2 3.2.1 6.2.2 9.1.4-2.4 2-4.8 3.8-7.3 5.7 1 3.1 1.8 6.3 2.8 9.4-2.6-1.9-5.3-3.8-8.1-5.6-2.6 1.9-5.3 3.8-7.9 5.6 1-3.1 2-6.2 2.9-9.3-2.4-1.9-4.8-3.7-7.2-5.6 3 0 6-.2 9-.3 1.1-3.2 2.2-6.3 3.3-9.5z" fill="${on ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`;
 
-// Paperclip.
-export const paperclip = () =>
-  `<svg class="paperclip" viewBox="0 0 22 52" aria-hidden="true"><path d="M7 14V8a4 4 0 0 1 8 0v34a6 6 0 0 1-12 0V12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
-
-// A round rubber stamp with text on a circle and an inner label.
-export function stampSVG({ top = 'EASTERN SIERRA', bottom = 'OCT · 2026', mid = 'FOUND', seed = 3, size = 110 } = {}) {
-  const r = rng(seed);
-  const id = 'st' + seed;
-  const holes = Array.from({ length: 26 }, () => `<circle cx="${(10 + r() * 100).toFixed(1)}" cy="${(10 + r() * 100).toFixed(1)}" r="${(0.6 + r() * 1.8).toFixed(1)}" fill="black"/>`).join('');
-  return `<svg viewBox="0 0 120 120" width="${size}" aria-hidden="true"><defs>
-<path id="${id}a" d="M20 60a40 40 0 1 1 80 0"/><path id="${id}b" d="M17 60a43 43 0 0 0 86 0"/>
-<mask id="${id}m"><rect width="120" height="120" fill="white"/>${holes}</mask></defs>
-<g mask="url(#${id}m)" fill="currentColor" stroke="currentColor">
-<circle cx="60" cy="60" r="54" fill="none" stroke-width="3.2"/><circle cx="60" cy="60" r="47" fill="none" stroke-width="1.2"/>
-<text font-family="Courier Prime, monospace" font-weight="700" font-size="11.5" letter-spacing="2.4" stroke="none"><textPath href="#${id}a" startOffset="50%" text-anchor="middle">${top}</textPath></text>
-<text font-family="Courier Prime, monospace" font-weight="700" font-size="10.5" letter-spacing="2.2" stroke="none"><textPath href="#${id}b" startOffset="50%" text-anchor="middle" dominant-baseline="hanging">${bottom}</textPath></text>
-<path d="M18 50 H102 M18 72 H102" stroke-width="1.4"/>
-<text x="60" y="66.5" text-anchor="middle" font-family="Fell, Georgia, serif" font-size="19" stroke="none" letter-spacing="1">${mid}</text>
-</g></svg>`;
-}
+// Check mark, drawn with the pen (animated by drawOn when toggled on).
+export const tick = () => `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.2 8.6 6.4 11.6 12.8 4.6" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>`;

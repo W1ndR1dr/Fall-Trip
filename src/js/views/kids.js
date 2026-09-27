@@ -1,37 +1,46 @@
 import * as store from '../store.js';
 import { checklist } from '../store.js';
 import { esc, kids, chime, haptic, reducedMotion } from '../ui.js';
-import { thunk, pressIn, stampSVG, drawOn } from '../hand.js';
+import { bloomIn, pop, tick, drawOn } from '../hand.js';
 import { burst } from '../fx.js';
-import { hunt, badgeLines, leafScience, tracks, rocks, carGames, trivia, drawPrompts, sky } from '../content/kids.js';
+import { hunt, leafScience, tracks, rocks, carGames, trivia, drawPrompts, sky } from '../content/kids.js';
 import { recipes, activities } from '../content/trip.js';
-import { head, page, slip, tag, art, icons, rerender } from './common.js';
+import { head, page, card, icons, rerender } from './common.js';
 
-// Painting for each hunt item and rock.
 const SPEC = { aspen: 'spec-aspen', cottonwood: 'spec-cottonwood', willow: 'spec-willow', birch: 'spec-birch', red: 'spec-red', big: 'spec-big', heart: 'spec-heart', cone: 'spec-cone', granite: 'spec-granite', dam: 'spec-dam', tufa: 'spec-tufa', eyes: 'spec-eyes', track: 'track-deer', obsidian: 'spec-obsidian' };
-const LATIN = { aspen: 'Populus tremuloides', cottonwood: 'Populus trichocarpa', willow: 'Salix sp.', birch: 'Betula occidentalis', red: 'Acer glabrum, or wild rose', cone: 'Pinus jeffreyi', granite: 'Sierra Nevada batholith', dam: 'Castor canadensis, engineer', tufa: 'calcium carbonate', eyes: 'Populus tremuloides', obsidian: 'volcanic glass' };
-const ROCKART = { granite: 'spec-granite', tufa: 'spec-tufa', obsidian: 'spec-obsidian', pumice: 'spec-granite', panum: 'vig-granite', caldera: 'vig-night', islands: 'vig-tufa' };
+const LATIN = { aspen: 'Populus tremuloides', cottonwood: 'Populus trichocarpa', willow: 'Salix', birch: 'Betula occidentalis', red: 'Acer glabrum', cone: 'Pinus jeffreyi', eyes: 'Populus tremuloides', obsidian: 'volcanic glass', tufa: 'calcium carbonate' };
+const ROCKART = { granite: 'spec-granite', tufa: 'spec-tufa', obsidian: 'spec-obsidian', pumice: 'spec-granite', panum: 'spec-obsidian', caldera: 'vig-night', islands: 'vig-tufa' };
+
+const checkRow = (id, on, labelHTML) => `<label class="checkrow"><input type="checkbox" data-id="${id}" ${on ? 'checked' : ''}><span class="box">${tick()}</span><span class="label">${labelHTML}</span></label>`;
+function wireChecks(root, cl) {
+  root.querySelectorAll('input[data-id]').forEach((i) => i.addEventListener('change', () => {
+    const on = cl.toggle(i.dataset.id);
+    i.checked = on;
+    haptic();
+    if (on) { drawOn(i.nextElementSibling.querySelector('svg'), { ms: 260 }); const r = i.getBoundingClientRect(); burst(r.left + 12, r.top + 12, { n: 10 }); chime([784, 988]); }
+  }));
+}
 
 export function kidsHome() {
-  const shelf = [
-    ['#/kids/hunt', 'spec-aspen', 'The Leaf Hunt', 'eleven treasures to press'],
-    ['#/kids/leaves', 'sci-red', 'Why Leaves Change', 'the gold was hiding'],
-    ['#/kids/tracks', 'track-beaver', 'Who Walked Here?', 'animal tracks'],
-    ['#/kids/rocks', 'spec-tufa', 'Rocks & Volcanoes', 'tufa, obsidian, a supervolcano'],
-    ['#/kids/sky', 'vig-night', 'The Night Sky', 'a New Moon weekend'],
-    ['#/kids/draw', 'spec-heart', 'Draw & Make', 'rubbings, pressing, prompts'],
-    ['#/kids/games', 'vig-packed', 'Car Games', 'I-spy, trivia, stories'],
-    ['#/kids/photos', 'vig-aspens', 'Photo List', 'twelve family shots'],
-    ['#/kids/cozy', 'vig-orchard', 'The Cozy Kitchen', 'cocoa, cider, caramel apples'],
+  const tiles = [
+    ['#/kids/hunt', 'spec-aspen', 'Leaf hunt', '11 things to find'],
+    ['#/kids/leaves', 'sci-red', 'Why leaves change', 'Scroll and watch'],
+    ['#/kids/tracks', 'track-beaver', 'Animal tracks', '8 to look for'],
+    ['#/kids/rocks', 'spec-tufa', 'Rocks & volcanoes', 'Tufa, obsidian, lava'],
+    ['#/kids/sky', 'vig-night', 'Night sky', 'New Moon Saturday'],
+    ['#/kids/draw', 'spec-heart', 'Draw & make', 'Rubbings and pressing'],
+    ['#/kids/games', 'vig-packed', 'Car games', 'Games and trivia'],
+    ['#/kids/photos', 'vig-aspens', 'Photo list', '12 family photos'],
+    ['#/kids/cozy', 'spec-red', 'Recipes', 'Cocoa and caramel apples'],
   ];
   return {
-    title: 'Explorer HQ',
-    html: page(`${head('Explorer HQ', { section: 'VIII · for the kids', folio: '22', lede: 'Pages for the explorers. Pick one!' })}
-      <div class="shelf">${shelf.map(([h, a, t, s], i) => `<a href="${h}">${slip(`${i % 3 === 0 ? '<span class="tape"></span>' : ''}<img class="art" src="img/art/${a}.webp" alt="" loading="lazy" style="${a.startsWith('vig') ? 'width:100%;height:80px;object-fit:cover' : ''}"><b>${t}</b><span>${s}</span>`, { key: 'shelf' + i })}</a>`).join('')}</div>`),
+    title: 'Kids',
+    html: page(`${head('Kids', { lede: 'Things to find, read, and make.' })}
+      <div class="tiles">${tiles.map(([h, a, t, s]) => `<a href="${h}"><div class="pic"><img class="art ${a.startsWith('vig') ? 'wide' : ''}" src="img/art/${a}.webp" alt="" loading="lazy"></div><div class="txt"><b>${t}</b><span>${s}</span></div></a>`).join('')}</div>`),
   };
 }
 
-// ---------------- The leaf hunt: a specimen page per explorer ----------------
+// ---------------- Leaf hunt: one list per child ----------------
 export function huntView() {
   const k = kids();
   const who = Math.min(2, Math.max(0, store.get('huntKid', 0)));
@@ -39,71 +48,63 @@ export function huntView() {
   const core = hunt.filter((h) => !h.bonus);
   const done = core.filter((h) => cl.has(h.id)).length;
   return {
-    title: 'The Leaf Hunt',
-    html: page(`${head('The Leaf Hunt', { back: '#/kids', section: 'IV · the leaf hunt', folio: '12' })}
-      <div class="tabs-kraft" role="group" aria-label="Whose specimen page">${k.map((n, i) => `<button type="button" data-kid="${i}" aria-pressed="${i === who}">${esc(n)}</button>`).join('')}</div>
-      ${slip(`<div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
-        <div><div class="kicker">Specimens collected by</div><div class="hand" style="font-size:1.7rem;line-height:1.1">${esc(k[who])}</div>
-        <p class="typed small" data-count style="margin:6px 0 0">${done} OF ${core.length} PRESSED</p></div>
-        <span class="stamp" data-badge style="width:100px;opacity:${done === core.length ? '.9' : '0'}">${stampSVG({ top: 'MASTER LEAF', bottom: 'HUNTER · 2026', mid: 'BADGE', seed: 21 + who, size: 100 })}</span></div>
-        <p class="note-hand" data-badge-line style="${done === core.length ? '' : 'display:none'}">${esc(badgeLines[who % badgeLines.length])}</p>`, { cls: 'kraft', key: 'hunt-head' })}
-      <p class="note-hand" style="margin:4px 0 14px">Tap a square when you find it, and it gets pressed into the journal.</p>
-      <div class="specimens">${hunt.map((h, i) => `<button type="button" class="specimen" data-id="${h.id}" data-key="spec-${h.id}" aria-pressed="${cl.has(h.id)}" aria-label="${esc(h.name)}${cl.has(h.id) ? ', found' : ''}">
-        <span class="frame"></span>
-        <span class="found-stamp stamp">${stampSVG({ top: 'FOUND', bottom: 'OCT 2026', mid: '✓', seed: 40 + i, size: 62 })}</span>
-        <span class="pic"><img src="img/art/${SPEC[h.id]}.webp" alt="" loading="lazy"><span class="tape ${['', 't2', 't3'][i % 3]}"></span></span>
-        ${h.bonus ? '<span class="bonus-flag">bonus</span>' : `<span class="typed" style="font-size:.7rem;color:var(--ink-2)">No. ${String(i + 1).padStart(2, '0')}</span>`}
-        <b>${esc(h.name)}</b>${LATIN[h.id] ? `<span class="latin">${esc(LATIN[h.id])}</span>` : ''}
-        <span class="hint">${esc(h.hint)}</span><span class="press">tap when found</span></button>`).join('')}</div>`),
+    title: 'Leaf hunt',
+    html: page(`${head('Leaf hunt', { back: '#/kids', lede: 'Tap a card when you find it. Each explorer has their own list.' })}
+      <div class="segmented" role="group" aria-label="Whose list">${k.map((n, i) => `<button type="button" data-kid="${i}" aria-pressed="${i === who}">${esc(n)}</button>`).join('')}</div>
+      ${card(`<div class="tally"><span><span class="eyebrow">${esc(k[who])}</span></span><b data-count>${done} / ${core.length}</b></div>
+        <div class="progress"><i style="width:${(100 * done) / core.length}%"></i></div>
+        <p class="small" data-done style="margin-top:10px" ${done === core.length ? '' : 'hidden'}><b>All ${core.length} found.</b> Well done!</p>`).replace('<div class="card ', '<div style="margin:16px 0 18px" class="card ')}
+      <div class="hunt">${hunt.map((h) => `<button type="button" class="find" data-id="${h.id}" aria-pressed="${cl.has(h.id)}">
+        <span class="tick">${tick()}</span>
+        <span class="pic"><img src="img/art/${SPEC[h.id]}.webp" alt="" loading="lazy"></span>
+        ${h.bonus ? '<span class="bonus">Bonus</span>' : ''}<b>${esc(h.name)}</b>${LATIN[h.id] ? `<span class="latin">${esc(LATIN[h.id])}</span>` : ''}
+        <span class="hint">${esc(h.hint)}</span></button>`).join('')}</div>`),
     mount(root) {
       root.querySelectorAll('[data-kid]').forEach((b) => b.addEventListener('click', () => { store.set('huntKid', +b.dataset.kid); rerender(); }));
-      root.querySelectorAll('.specimen').forEach((b) => b.addEventListener('click', () => {
+      root.querySelectorAll('.find').forEach((b) => b.addEventListener('click', () => {
         const on = cl.toggle(b.dataset.id);
         b.setAttribute('aria-pressed', on);
         haptic();
         const n = core.filter((h) => cl.has(h.id)).length;
-        root.querySelector('[data-count]').textContent = `${n} OF ${core.length} PRESSED`;
+        root.querySelector('[data-count]').textContent = `${n} / ${core.length}`;
+        root.querySelector('.progress i').style.width = (100 * n) / core.length + '%';
+        root.querySelector('[data-done]').hidden = n !== core.length;
         if (on) {
-          pressIn(b.querySelector('.pic img'), b.querySelector('.pic .tape'));
-          const st = b.querySelector('.found-stamp');
-          st.style.opacity = '0';
-          setTimeout(() => thunk(st, { rot: -12 }), 380);
+          bloomIn(b.querySelector('.pic img'));
+          pop(b.querySelector('.tick'));
+          drawOn(b.querySelector('.tick svg'), { ms: 300 });
           const r = b.getBoundingClientRect();
-          setTimeout(() => { burst(r.left + r.width / 2, r.top + r.height / 3, { n: 14 }); chime(); }, 420);
+          burst(r.left + r.width / 2, r.top + r.height / 3, { n: 14 });
+          chime();
+          if (n === core.length) setTimeout(() => { burst(window.innerWidth / 2, 200, { n: 40 }); chime([523, 659, 784, 1047]); }, 350);
         }
-        const badge = root.querySelector('[data-badge]');
-        const line = root.querySelector('[data-badge-line]');
-        if (n === core.length && on) {
-          setTimeout(() => { thunk(badge, { rot: -8 }); chime([523, 659, 784, 1047]); burst(window.innerWidth / 2, 180, { n: 40 }); line.style.display = ''; }, 700);
-        } else if (n < core.length) { badge.style.opacity = '0'; line.style.display = 'none'; }
       }));
     },
   };
 }
 
-// ---------------- Why leaves change: scroll paints the leaf ----------------
+// ---------------- Why leaves change ----------------
 export function leavesView() {
   const s = leafScience;
   const steps = [
-    { title: 'All summer: a sugar kitchen', text: s.intro, at: 0 },
+    { title: 'Summer', text: s.intro, at: 0 },
     ...s.steps.map((st, i) => ({ ...st, at: [0.05, 0.4, 0.68, 1][i] })),
-    { title: 'Wonder', text: s.wonder, at: 1 },
+    { title: 'Something to wonder about', text: s.wonder, at: 1 },
   ];
-  const PIG = { chl: '#5e9b3a', car: '#e9b52f', ant: '#c2412d' };
+  const PIG = { chl: '#5e9b3a', car: '#e2ab22', ant: '#c2412d' };
   return {
     title: 'Why leaves change',
-    html: page(`${head('Why Leaves Change', { back: '#/kids', section: 'VIII · for the kids', folio: '24', lede: 'Scroll slowly and watch the leaf.' })}
+    html: page(`${head('Why leaves change', { back: '#/kids', lede: 'Scroll slowly and watch the leaf. Or drag the slider.' })}
       <section class="science">
         <div class="science-stage"><div style="display:grid;justify-items:center">
-          <div class="leafbox"><img class="art" data-l="green" src="img/art/sci-green.webp" alt="An aspen leaf changing color" style="position:relative">
-            <img class="art" data-l="gold" src="img/art/spec-aspen.webp" alt="" style="position:absolute;inset:0;opacity:0">
-            <img class="art" data-l="red" src="img/art/sci-red.webp" alt="" style="position:absolute;inset:0;opacity:0"></div>
-          <div class="pigbars">${s.pigments.map((p) => `<div class="pigbar"><span>${p.name.toUpperCase()}</span><span><i data-pig="${p.key}" style="background:${PIG[p.key]}"></i></span></div>`).join('')}</div>
-          <label class="hand" style="margin-top:6px;display:flex;gap:8px;align-items:center">summer <input class="season" type="range" min="0" max="100" value="0" data-season aria-label="Season, summer to fall"> fall</label>
+          <div class="leafbox"><img class="art" data-l="green" src="img/art/sci-green.webp" alt="An aspen leaf changing color from green to gold">
+            <img class="art" data-l="gold" src="img/art/spec-aspen.webp" alt="" style="opacity:0"><img class="art" data-l="red" src="img/art/sci-red.webp" alt="" style="opacity:0"></div>
+          <div class="pigments">${s.pigments.map((p) => `<div class="pigment"><span>${p.name}</span><span><i data-pig="${p.key}" style="background:${PIG[p.key]}"></i></span></div>`).join('')}</div>
+          <label class="small muted" style="margin-top:8px;display:flex;gap:10px;align-items:center">Summer <input type="range" min="0" max="100" value="0" data-season aria-label="Season, summer to fall"> Fall</label>
         </div></div>
-        <div class="science-steps">${steps.map((st, i) => `<div class="slip" data-at="${st.at}" data-key="sci${i}"><h3>${esc(st.title)}</h3><p>${esc(st.text)}</p></div>`).join('')}
-          ${slip(`<h3>What each color does</h3>${s.pigments.map((p) => `<p><span style="color:${PIG[p.key]};font-size:1.3em">●</span> <b>${p.name}:</b> ${esc(p.kid)}</p>`).join('')}`, { key: 'sci-colors', cls: 'kraft' })}
-          ${slip(`<h3>Aspen facts</h3>${s.bonus.map((b) => `<p>${esc(b)}</p>`).join('')}<a class="btn small" href="#/kids/hunt">Go find a flat aspen stem →</a>`, { key: 'sci-facts' })}
+        <div class="science-steps">${steps.map((st) => `<div class="card" data-at="${st.at}"><h3>${esc(st.title)}</h3><p>${esc(st.text)}</p></div>`).join('')}
+          ${card(`<h3>The three colors</h3>${s.pigments.map((p) => `<p><span style="color:${PIG[p.key]}">●</span> <b>${p.name}.</b> ${esc(p.kid)}</p>`).join('')}`)}
+          ${card(`<h3>Aspen facts</h3>${s.bonus.map((b) => `<p>${esc(b)}</p>`).join('')}<div class="actions"><a class="btn small" href="#/kids/hunt">Find a flat aspen stem</a></div>`)}
         </div></section>`),
     mount(root) {
       const L = Object.fromEntries([...root.querySelectorAll('[data-l]')].map((e) => [e.dataset.l, e]));
@@ -147,24 +148,15 @@ export function leavesView() {
   };
 }
 
-function wireChecks(root, cl) {
-  root.querySelectorAll('input[data-id]').forEach((i) => i.addEventListener('change', () => {
-    const on = cl.toggle(i.dataset.id);
-    i.checked = on;
-    haptic();
-    if (on) { const r = i.getBoundingClientRect(); burst(r.left + 14, r.top + 14, { n: 12 }); chime([784, 988]); }
-  }));
-}
-
 export function tracksView() {
   const cl = checklist('tracks');
   return {
-    title: 'Who walked here?',
-    html: page(`${head('Who Walked Here?', { back: '#/kids', section: 'VIII · for the kids', folio: '25', lede: 'Look in mud, sand, and dust near water, early in the morning.' })}
-      <div class="cards">${tracks.map((t) => slip(`<div class="track"><img class="art" src="img/art/track-${t.id}.webp" alt="${esc(t.name)} track" loading="lazy"><div>
-        <h3>${esc(t.name)}</h3><p class="note-hand">${esc(t.clue)}</p><p class="small muted"><i>${esc(t.where)}</i></p>
-        <label class="check" style="border:0;padding:2px 0;min-height:44px"><input type="checkbox" data-id="${t.id}" ${cl.has(t.id) ? 'checked' : ''}><span>We saw it!</span></label></div></div>`, { key: 'tr' + t.id })).join('')}</div>
-      <p class="note-hand section">Never feed wildlife. Keep food in the car or the lodging. Bears are real here.</p>`),
+    title: 'Animal tracks',
+    html: page(`${head('Animal tracks', { back: '#/kids', lede: 'Look in mud, sand, and dust near water, early in the morning.' })}
+      <div class="grid two">${tracks.map((t) => card(`<div class="track"><img class="art" src="img/art/track-${t.id}.webp" alt="${esc(t.name)} track" loading="lazy"><div>
+        <h3>${esc(t.name)}</h3><p style="margin:4px 0 0">${esc(t.clue)}</p><p class="small muted" style="margin:4px 0 0">${esc(t.where)}</p></div></div>
+        <div style="margin-top:6px">${checkRow(t.id, cl.has(t.id), 'We saw one')}</div>`)).join('')}</div>
+      <p class="small muted" style="margin-top:18px">Never feed wildlife. Keep food in the car or indoors; black bears live here.</p>`),
     mount: (root) => wireChecks(root, cl),
   };
 }
@@ -172,10 +164,10 @@ export function tracksView() {
 export function rocksView() {
   return {
     title: 'Rocks & volcanoes',
-    html: page(`${head('Rocks & Volcanoes', { back: '#/kids', section: 'VIII · for the kids', folio: '26', lede: 'A land made by fire and ice. Some of it is younger than castles!' })}
-      <div class="cards">${rocks.map((r, i) => slip(`${ROCKART[r.id] ? `<img class="art" src="img/art/${ROCKART[r.id]}.webp" alt="" loading="lazy" style="${ROCKART[r.id].startsWith('vig') ? 'width:100%' : 'width:96px;float:right;margin:-6px -4px 4px 8px'}">` : ''}
-        <h3>${esc(r.title)}</h3><p class="typed small muted">${esc(r.where.toUpperCase())}</p><p>${esc(r.text)}</p>`, { key: 'rk' + r.id, tape: i === 0 ? 'corner-l' : '' })).join('')}</div>
-      <p class="note-hand section">Look, touch, photograph. Leave the rocks, obsidian, and pumice for the next explorers.</p>`),
+    html: page(`${head('Rocks & volcanoes', { back: '#/kids', lede: 'Some of this land is younger than castles.' })}
+      <div class="grid two">${rocks.map((r) => card(`${ROCKART[r.id] ? `<img class="art" src="img/art/${ROCKART[r.id]}.webp" alt="" loading="lazy" style="${ROCKART[r.id].startsWith('vig') ? 'width:100%;border-radius:10px;margin-bottom:12px' : 'width:84px;float:right;margin:0 0 6px 10px'}">` : ''}
+        <h3>${esc(r.title)}</h3><p class="small faint" style="margin-top:4px">${esc(r.where)}</p><p>${esc(r.text)}</p>`)).join('')}</div>
+      <p class="small muted" style="margin-top:18px">Look, touch, and take pictures, but leave rocks, obsidian, and pumice where you found them.</p>`),
   };
 }
 
@@ -183,12 +175,13 @@ export function skyView() {
   const cl = checklist('sky');
   return {
     title: 'Night sky',
-    html: page(`${head('The Night Sky', { back: '#/kids', section: 'VII · the night sky', folio: '20', lede: sky.headline })}
-      ${slip(`<img class="art" src="img/art/vig-night.webp" alt="" style="width:100%"><p style="margin-top:8px">${esc(sky.moon.note)}</p><p class="note-hand">${esc(sky.timing)}</p>`, { key: 'sky-hero', tape: 't2' })}
-      ${slip(`<div class="kicker">A sky scavenger hunt</div>${sky.finds.map((f) => `<label class="check"><input type="checkbox" data-id="${f.id}" ${cl.has(f.id) ? 'checked' : ''}><span><b>${esc(f.name)}</b> <span class="typed small muted">${esc(f.when)}</span><br>${esc(f.how)}</span></label>`).join('')}`, { key: 'sky-hunt' })}
-      ${slip(`<div class="kicker">Stargazing tips</div><ul>${sky.tips.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`, { key: 'sky-tips', cls: 'kraft' })}
-      <div class="btn-row"><a class="btn" href="#/faith/m-stars">${icons.book}“He names the stars”</a></div>
-      <p class="note-hand section">Tip: switch the journal to lantern mode (Settings → Theme → Dark) to save your night vision.</p>`),
+    html: page(`${head('Night sky', { back: '#/kids', eyebrow: 'Saturday, October 10 · New Moon', lede: sky.moon.note })}
+      <img class="art" src="img/art/vig-night.webp" alt="" style="width:100%;max-width:560px;border-radius:14px;margin-bottom:18px">
+      <p class="read">${esc(sky.timing)}</p>
+      <div class="section">${card(`<span class="eyebrow">Things to find</span><div style="margin-top:6px">${sky.finds.map((f) => checkRow(f.id, cl.has(f.id), `<b>${esc(f.name)}</b><small>${esc(f.how)} <span class="faint">${esc(f.when)}.</span></small>`)).join('')}</div>`)}</div>
+      <div class="section">${card(`<span class="eyebrow">Tips</span><ul style="margin:8px 0 0;padding-left:1.1em">${sky.tips.map((t) => `<li style="margin:6px 0">${esc(t)}</li>`).join('')}</ul>`, 'tint')}</div>
+      <div class="btn-row"><a class="btn" href="#/faith/m-stars">${icons.book}Devotion: He names the stars</a></div>
+      <p class="small muted" style="margin-top:16px">Dark mode (Settings) is easier on your night vision.</p>`),
     mount: (root) => wireChecks(root, cl),
   };
 }
@@ -196,10 +189,10 @@ export function skyView() {
 export function gamesView() {
   return {
     title: 'Car games',
-    html: page(`${head('Car Games', { back: '#/kids', section: 'VIII · for the kids', folio: '27', lede: 'For the long, curvy roads.' })}
-      <div class="cards">${carGames.map((g, i) => slip(`<h3>${esc(g.title)}</h3><p>${esc(g.text)}</p>`, { key: 'g' + i, cls: i % 3 === 1 ? 'kraft' : '' })).join('')}</div>
-      ${slip(`<div class="kicker">Fall trivia</div><p class="note-hand">Tap a question to peek at the answer.</p>${trivia.map((t) => `<details class="qa"><summary>${esc(t.q)}</summary><p>${esc(t.a)}</p></details>`).join('')}`, { key: 'trivia', tape: 'corner-r' })}
-      <p class="note-hand section">Car-sick tip: eyes on the horizon, windows cracked, crackers ready. Pause the games on the curviest stretches.</p>`),
+    html: page(`${head('Car games', { back: '#/kids' })}
+      <div class="grid two">${carGames.map((g) => card(`<h3>${esc(g.title)}</h3><p class="muted">${esc(g.text)}</p>`)).join('')}</div>
+      <div class="section">${card(`<span class="eyebrow">Trivia</span><div style="margin-top:4px">${trivia.map((t) => `<details class="qa"><summary>${esc(t.q)}</summary><p>${esc(t.a)}</p></details>`).join('')}</div>`)}</div>
+      <p class="small muted" style="margin-top:16px">Car sickness: eyes on the horizon, a window cracked, crackers handy. Skip the games on the curviest stretches.</p>`),
   };
 }
 
@@ -207,14 +200,10 @@ export function drawView() {
   const { rubbing, pressing } = activities;
   return {
     title: 'Draw & make',
-    html: page(`${head('Draw & Make', { back: '#/kids', section: 'VIII · for the kids', folio: '28' })}
-      <div class="cards">
-        ${slip(`<h3>${esc(rubbing.title)}</h3><ol>${rubbing.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>`, { key: 'rub', tape: 't2' })}
-        ${slip(`<h3>${esc(pressing.title)}</h3><ol>${pressing.steps.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>`, { key: 'press', cls: 'kraft' })}
-      </div>
-      ${slip(`<div class="kicker">Drawing prompt</div><p class="hand" data-prompt style="font-size:1.6rem;line-height:1.25;min-height:3.8em">${esc(drawPrompts[0])}</p>
-        <button class="btn gold" type="button" data-next>${icons.sparkle}Another one</button>
-        <ul style="margin-top:14px">${drawPrompts.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>`, { key: 'prompts' })}`),
+    html: page(`${head('Draw & make', { back: '#/kids' })}
+      <div class="grid two">${[rubbing, pressing].map((x) => card(`<h3>${esc(x.title)}</h3><ol style="padding-left:1.2em;margin:10px 0 0">${x.steps.map((s) => `<li style="margin:6px 0">${esc(s)}</li>`).join('')}</ol>`)).join('')}</div>
+      <div class="section">${card(`<span class="eyebrow">Drawing prompt</span><p class="read" data-prompt style="font-size:1.35rem;min-height:3.4em;margin-top:8px">${esc(drawPrompts[0])}</p>
+        <button class="btn" type="button" data-next>${icons.sparkle}Another one</button>`)}</div>`),
     mount(root) {
       let i = 0;
       root.querySelector('[data-next]').addEventListener('click', () => {
@@ -230,30 +219,30 @@ export function photosView() {
   const cl = checklist('photos');
   return {
     title: 'Photo list',
-    html: page(`${head('The Photo List', { back: '#/kids', section: 'VIII · for the kids', folio: '29', lede: 'Twelve pictures to take home.' })}
-      ${slip(activities.photos.map((p) => `<label class="check"><input type="checkbox" data-id="${p.id}" ${cl.has(p.id) ? 'checked' : ''}><span>${esc(p.text)}</span></label>`).join(''), { key: 'photos', tape: 'corner-l' })}
-      <p class="note-hand">Night-sky tip: prop the phone on a rock. iPhone Night mode takes a long exposure when it’s still.</p>`),
+    html: page(`${head('Photo list', { back: '#/kids', lede: 'Twelve pictures to take this weekend.' })}
+      ${card(activities.photos.map((p) => checkRow(p.id, cl.has(p.id), esc(p.text))).join(''))}
+      <p class="small muted" style="margin-top:14px">For the night sky, rest the phone on something still; Night mode takes a long exposure automatically.</p>`),
     mount: (root) => wireChecks(root, cl),
   };
 }
 
 const READS = [
-  ['Owl Moon', 'Jane Yolen', 'A hushed night walk. Perfect before stargazing.'],
-  ['Frederick', 'Leo Lionni', 'A mouse who gathers colors and words for winter.'],
-  ['Leaf Man', 'Lois Ehlert', 'Collage leaves that travel. Try making your own!'],
-  ['Fletcher and the Falling Leaves', 'Julia Rawlinson', 'A fox worries about his tree losing its leaves.'],
-  ['Winnie-the-Pooh (the Pooh Sticks chapter)', 'A. A. Milne', 'Then play Pooh Sticks at a creek bridge!'],
-  ['The Hobbit, chapter 1', 'J. R. R. Tolkien', 'A fireside read-aloud: “In a hole in the ground there lived a hobbit.”'],
+  ['Owl Moon', 'Jane Yolen', 'A quiet night walk. Good before stargazing.'],
+  ['Frederick', 'Leo Lionni', 'A mouse who saves up colors and words for winter.'],
+  ['Leaf Man', 'Lois Ehlert', 'Collage leaves that travel. Try making one.'],
+  ['Fletcher and the Falling Leaves', 'Julia Rawlinson', 'A fox worries about his tree.'],
+  ['Winnie-the-Pooh', 'A. A. Milne', 'Read the Poohsticks chapter, then play it at a creek bridge.'],
+  ['The Hobbit, chapter one', 'J. R. R. Tolkien', 'A read-aloud for the evening.'],
 ];
 export function cozyView() {
   return {
-    title: 'Cozy kitchen',
-    html: page(`${head('The Cozy Kitchen', { back: '#/kids', section: 'VIII · for the kids', folio: '30', lede: 'Cocoa, cider, caramel apples, and a good book.' })}
-      <div class="cards">${recipes.map((r, i) => slip(`<div class="kicker">Recipe card</div><h3>${esc(r.title)}</h3>
-        <p class="typed small" style="margin-top:8px">YOU NEED</p><ul>${r.ingredients.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
-        <p class="typed small">STEPS</p><ol>${r.steps.map((x) => `<li>${esc(x)}</li>`).join('')}</ol>
-        ${r.note ? `<p class="note-hand">${esc(r.note)}</p>` : ''}`, { key: 'rc' + r.id, cls: 'ruled-card', tape: ['', 't2', 't3', ''][i] })).join('')}</div>
-      ${slip(`<div class="kicker">For the reading corner</div><p class="note-hand">Booky Joint in Mammoth has new and used books if you want a trip souvenir.</p>
-        <ul>${READS.map(([t, a, w]) => `<li><i>${esc(t)}</i> by ${esc(a)}. ${esc(w)}</li>`).join('')}</ul>`, { key: 'reads', cls: 'kraft' })}`),
+    title: 'Recipes',
+    html: page(`${head('Recipes', { back: '#/kids', lede: 'For the kitchen at the lodging.' })}
+      <div class="grid two">${recipes.map((r) => card(`<h3>${esc(r.title)}</h3>
+        <p class="eyebrow" style="margin-top:14px">Ingredients</p><ul style="padding-left:1.1em;margin:6px 0">${r.ingredients.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+        <p class="eyebrow" style="margin-top:14px">Steps</p><ol style="padding-left:1.2em;margin:6px 0">${r.steps.map((x) => `<li style="margin:5px 0">${esc(x)}</li>`).join('')}</ol>
+        ${r.note ? `<p class="small muted">${esc(r.note)}</p>` : ''}`)).join('')}</div>
+      <div class="section">${card(`<span class="eyebrow">Books to read aloud</span><ul style="padding-left:1.1em;margin:10px 0 0">${READS.map(([t, a, w]) => `<li style="margin:7px 0"><i>${esc(t)}</i>, ${esc(a)}. <span class="muted">${esc(w)}</span></li>`).join('')}</ul>
+        <p class="small muted" style="margin-top:10px">Booky Joint in Mammoth sells new and used books.</p>`, 'tint')}</div>`),
   };
 }
