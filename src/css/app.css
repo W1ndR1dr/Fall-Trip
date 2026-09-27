@@ -213,6 +213,8 @@ p { margin: .45em 0; }
 .note-hand { font-family: var(--hand); color: var(--sepia); font-size: 1.05rem; line-height: 1.3; rotate: -1.2deg; }
 .note-hand.arrow::before { content: '↳ '; }
 .pencil-note { font-family: var(--hand); color: var(--pencil); font-size: .98rem; }
+.pencil-note a { display: inline-block; padding: 10px 2px; }
+#toast.show { opacity: 1; }
 
 /* Rubber stamp */
 .stamp { display: inline-grid; place-items: center; color: var(--stamp); rotate: -8deg; opacity: .88; mix-blend-mode: multiply; }
@@ -515,3 +517,9 @@ body::after { content: ''; position: fixed; left: 0; right: 0; top: 0; height: v
   filter: drop-shadow(0 2px 3px var(--shadow)); clip-path: polygon(0 4%, 100% 0, 98% 100%, 2% 96%); display: grid; }
 .cartouche .hand { font-size: 1.25rem; line-height: 1.1; }
 .cartouche .typed { font-size: .62rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: .08em; }
+
+/* During the trip the cover is a slim header, so Today is right there. */
+.cover.compact { min-height: 0; padding-top: calc(var(--safe-t) + 22px); padding-bottom: 22px; }
+.cover.compact .emblem { width: 64px; }
+.cover.compact h1 { font-size: 2.6rem; }
+.cover.compact .sub:last-of-type, .cover.compact .rule { display: none; }

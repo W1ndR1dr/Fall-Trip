@@ -69,14 +69,14 @@ export function home() {
   const names = hasNames() ? kids().map(esc).join(', ') : '';
   const found = [0, 1, 2].reduce((a, i) => a + checklist('hunt:' + i).count(), 0);
 
-  const cover = `<section class="cover" aria-label="Fall Trip journal cover"><span class="spine"></span><span class="band"></span>
+  const cover = `<section class="cover ${ph === 'during' ? 'compact' : ''}" aria-label="Fall Trip journal cover"><span class="spine"></span><span class="band"></span>
     <div class="foil">${emblem()}<h1>Fall Trip</h1><div class="sub">AN EASTERN SIERRA FIELD JOURNAL</div>
       <svg class="rule" viewBox="0 0 160 10" aria-hidden="true"><path d="M2 5h60M98 5h60" stroke="currentColor" stroke-width="1.2"/><path d="M80 1l4 4-4 4-4-4z" fill="currentColor"/></svg>
       <div class="sub" style="letter-spacing:.12em">OCTOBER 9 – 11 · MMXXVI</div></div>
     ${ph === 'before' ? `<div class="luggage" role="timer" aria-label="${c.d} days and ${c.h} hours until we leave"><div class="kicker" style="color:#6b3a1a">departs Friday, noon</div>
       <div class="count">${c.d}<small> days</small> ${c.h}<small> hrs</small></div><span class="typed">${names ? 'EXPLORERS: ' + names.toUpperCase() : 'PROPERTY OF THE EXPLORERS'}</span></div>` : ''}
     ${ph === 'after' ? `<div class="luggage"><div class="count" style="font-size:1.6rem">Welcome home</div><a class="typed" href="#/faith/lookback">look back together →</a></div>` : ''}
-    <div class="open-hint">open the journal ↓</div></section>`;
+    ${ph === 'during' ? '' : '<div class="open-hint">open the journal ↓</div>'}</section>`;
 
   const today = ph === 'during' ? `<div class="page">${todaySlip(t)}</div>` : '';
 
