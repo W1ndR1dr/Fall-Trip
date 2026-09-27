@@ -18,12 +18,12 @@
   --surface-2: #efe8da;
   --ink: #1d1914;
   --ink-2: #675c50;
-  --ink-3: #8a7f71;
+  --ink-3: #736859;
   --line: rgba(45, 32, 18, .12);
   --line-2: rgba(45, 32, 18, .2);
   --accent: #2c4a3a;          /* forest: primary actions */
   --on-accent: #fbf7ee;
-  --gold: #b9850f;            /* aspen: highlights, "now" */
+  --gold: #9a6d08;            /* aspen: highlights, "now" */
   --gold-soft: #f2e2b5;
   --rust: #a2461f;            /* small labels, links */
   --focus: #2667b0;
