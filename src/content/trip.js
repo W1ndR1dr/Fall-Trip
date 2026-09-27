@@ -32,8 +32,8 @@ export const days = [
     id: 'fri',
     label: 'Friday',
     date: 'Oct 9',
-    title: 'Over the mountains',
-    blurb: 'Leave at noon, orchards and goats in the valley, Tioga\'s granite in golden hour, and Mammoth by bedtime.',
+    title: 'Over Tioga Pass to Mammoth',
+    blurb: 'Leave at noon. Stops in Oakdale and Groveland, Tioga Road at golden hour, Mammoth around 8.',
     items: [
       { t: '2026-10-09T11:30:00-07:00', title: 'Pack the car', text: 'Snacks, water, and sick bags within reach of every seat. Cocoa in the thermos. Packing list is on the Plan tab.', kind: 'prep' },
       { t: '2026-10-09T12:00:00-07:00', title: 'Leave home', text: 'Lunch in the car. Friday traffic on I-680, I-580, and I-205: expect it to build. Start an audiobook.', kind: 'drive', anchor: true, drive: '~2 hr to Oakdale', maps: { daddr: 'Oakdale Cheese & Specialties, 10040 CA-120, Oakdale, CA' } },
@@ -53,8 +53,8 @@ export const days = [
     id: 'sat',
     label: 'Saturday',
     date: 'Oct 10',
-    title: 'Into the gold',
-    blurb: 'Peak color up north, beaver ponds, tufa towers, a fall festival, a cozy hour, and the darkest sky of the month.',
+    title: 'Aspens and Mono Lake',
+    blurb: 'Lundy Canyon and Conway Summit, South Tufa, June Lake\'s festival or a quiet afternoon, then stars under the New Moon.',
     items: [
       { t: '2026-10-10T07:00:00-07:00', title: 'Sunrise and a slow start', text: 'Golden hour until about 7:34. Breakfast in, or Stellar Brew (from 5:30), Good Life Café (7–8), or Black Velvet (6–8).', kind: 'food', menu: ['stellar', 'goodlife', 'blackvelvet'] },
       { t: '2026-10-10T08:15:00-07:00', title: 'Drive north to Lundy Canyon', text: 'About an hour. Bathroom stop in Lee Vining on the way (there are no restrooms at the Lundy trailhead). Parking at the trailhead is tight, so earlier is better.', kind: 'drive', drive: '~57 min', maps: { q: 'Lundy Canyon Trailhead, Lundy, CA' } },
@@ -73,7 +73,7 @@ export const days = [
     id: 'sun',
     label: 'Sunday',
     date: 'Oct 11',
-    title: 'The Lord\'s Day, and home',
+    title: 'Devotion, then home',
     blurb: 'A morning devotion with a view, then home by dinner. Pick the route over breakfast.',
     items: [
       { t: '2026-10-11T07:00:00-07:00', title: 'Morning light', text: 'Sunrise 7:01. Pack up slowly. Frosty mornings are likely at this elevation.', kind: 'prep' },
