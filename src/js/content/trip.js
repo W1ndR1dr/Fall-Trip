@@ -22,8 +22,6 @@ export const weather = {
     { name: 'Bishop', elev: '4,145 ft', hi: 80, lo: 40 },
   ],
   outlook: 'Outlook as of Sep 27: NOAA\'s 8–14 day outlook (Oct 4–10) gives a 70–80% chance of above-normal temperatures, with a warm, dry, light-wind ridge. That is good for keeping leaves on the trees.',
-  forecast: null, // filled by scripts/update-conditions.mjs
-  forecastRetrieved: null,
 };
 
 // ---------------------------------------------------------------------------

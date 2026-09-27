@@ -5,6 +5,7 @@ import { icons } from '../art.js';
 import { burst } from '../fx.js';
 import { days, routes, sun, weather, menu, beforeWeGo, RETRIEVED } from '../content/trip.js';
 import { packing } from '../content/packing.js';
+import { conditions } from '../content/conditions.js';
 import { head, page, mapsBtn, fmtTime, findDevotion, tripDay } from './common.js';
 
 const kindChip = {
@@ -43,6 +44,19 @@ function itemCard(it, state) {
   </li>`;
 }
 
+const DAYNAME = { fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+const asOf = () => new Date(conditions.retrieved).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+// NWS periods that fall on this trip day (only once the forecast reaches it).
+function forecastHTML(dayId) {
+  const rows = conditions.forecasts
+    .filter((f) => f.onTrip)
+    .map((f) => ({ place: f.place, ps: f.periods.filter((p) => p.name.startsWith(DAYNAME[dayId])) }))
+    .filter((r) => r.ps.length);
+  if (!rows.length) return '';
+  return `<p class="small"><b>NWS forecast (as of ${esc(asOf())}):</b></p>${rows.map((r) => `<p class="small"><b>${esc(r.place)}:</b> ${r.ps.map((p) => `${esc(p.name)} ${esc(p.temp)}, ${esc(p.text)}, wind ${esc(p.wind)}`).join('; ')}</p>`).join('')}`;
+}
+
 export function plan(dayId) {
   const t = now().getTime();
   const active = dayId || tripDay(now()) || 'fri';
@@ -65,7 +79,7 @@ export function plan(dayId) {
       <p class="small muted">The Sierra crest hides the sun early in canyons. Golden light fades there 30–60 minutes before sunset.</p>
     </section>
     <section class="card"><h3>Weather</h3>
-      ${weather.forecast ? `<p class="small"><b>Forecast (${esc(weather.forecastRetrieved)}):</b></p>${weather.forecast.map((f) => `<p class="small"><b>${esc(f.name)}:</b> ${esc(f.text)}</p>`).join('')}` : ''}
+      ${forecastHTML(day.id)}
       <ul class="small" style="padding-left:18px;margin:6px 0">${weather.places.map((p) => `<li><b>${esc(p.name)}</b> (${p.elev}): ~${p.hi}° / ${p.lo}°</li>`).join('')}</ul>
       <p class="small muted">${esc(weather.note)}</p><p class="small muted">${esc(weather.outlook)}</p>
     </section>
@@ -168,7 +182,12 @@ export function beforeView() {
     title: 'Before we go',
     html: page(`${head('Before we go', '#/plan', 'Friday morning')}
       <p class="lede">Five minutes of checks while there's still signal. Data in this app was last refreshed ${esc(RETRIEVED)}.</p>
-      <section class="card"><h3>Live links</h3><ul class="linklist">${beforeWeGo.links.map((l) => `<li><a href="${l.url}" target="_blank" rel="noopener">${icons.ext}<span>${esc(l.name)}<span class="why">${esc(l.why)}</span></span></a></li>`).join('')}</ul></section>
+      <section class="card"><h3>Conditions snapshot</h3><p class="small muted">Saved into the app ${esc(asOf())}. Recheck the live links below before you go.</p>
+        <p class="small"><b>Tioga Road (NPS):</b> ${esc(conditions.tioga || 'not captured')}</p>
+        ${Object.entries(conditions.roads).map(([r, t]) => `<p class="small"><b>Caltrans ${r === '395' ? 'US' : 'CA'}-${r}:</b> ${esc(t.slice(0, 260))}…</p>`).join('')}
+        ${conditions.forecasts.map((f) => `<p class="small"><b>${esc(f.place)}${f.onTrip ? ' (trip days)' : ''}:</b> ${f.periods.slice(0, 3).map((p) => `${esc(p.name)} ${esc(p.temp)} ${esc(p.text)}`).join(' · ')}</p>`).join('')}
+      </section>
+      <section class="card section"><h3>Live links</h3><ul class="linklist">${beforeWeGo.links.map((l) => `<li><a href="${l.url}" target="_blank" rel="noopener">${icons.ext}<span>${esc(l.name)}<span class="why">${esc(l.why)}</span></span></a></li>`).join('')}</ul></section>
       <div class="card section"><div style="display:flex;justify-content:space-between"><b>Done</b><span data-count></span></div><div class="progress" style="margin-top:8px"><i></i></div></div>
       ${checklistHTML('before', groups)}
       <section class="card section"><h3>If Tioga is closed</h3>
