@@ -1,13 +1,16 @@
 /* Self-hosted fonts, Latin subset only (precached by the service worker).
    Newsreader: display and reading serif (variable opsz + wght, plus italic).
    Inter: every UI string, time and number (variable opsz + wght).
-   Andika: kids' large print only. Licenses: src/assets/fonts/LICENSE-*.txt */
+   Andika: kids' large print only. Licenses: src/assets/fonts/LICENSE-*.txt
+   Inter and Newsreader (roman) are preloaded from index.html (vite.config.ts). */
 @font-face {
   font-family: 'Newsreader';
   src: url('../../node_modules/@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2') format('woff2-variations');
   font-weight: 200 800;
   font-style: normal;
-  font-display: swap;
+  /* Preloaded and precached, so it resolves in well under 100 ms: block
+     (no fallback flash, no reflow of the large titles and countdown). */
+  font-display: block;
 }
 /* The italic only sets a word or two ("days", water labels), so it ships
    without the opsz axis (65 KB instead of 147 KB). */

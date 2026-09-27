@@ -63,9 +63,23 @@ const pairs = [
   ['text', ['bg', 'glass'], TEXT], ['text-2', ['bg', 'glass'], TEXT],
   ['focus', ['bg'], UI], ['focus', ['bg-2'], UI],
 ];
-// The light sky tint at the top of pages: marks must hold on it too.
-const extra = { light: { sky: '#efe2d1' }, dark: { sky: '#170e08' }, night: { sky: '#050202' } };
+// The light sky tint at the top of pages: marks must hold on it too. `bloom`
+// is the strongest point of the live card's warm radial bloom (--live-bloom's
+// first stop), composited over the card.
+const extra = {
+  light: { sky: '#efe2d1', bloom: 'rgba(255, 190, 110, 0.24)' },
+  dark: { sky: '#170e08', bloom: 'rgba(255, 160, 70, 0.1)' },
+  night: { sky: '#050202', bloom: 'rgba(0, 0, 0, 0)' },
+};
 pairs.push(['accent-mark', ['sky'], UI], ['text-3', ['sky'], TEXT], ['accent-text', ['sky'], TEXT]);
+// Chips and tags on the page, and on the live card's bloom corner (LeaveBy,
+// "Last gas", "Open", night tags, the live pill).
+pairs.push(
+  ['ember', ['bg', 'ember-soft'], TEXT], ['ember', ['bg-2', 'bloom', 'ember-soft'], TEXT],
+  ['ok', ['bg', 'ok-soft'], TEXT], ['night', ['bg', 'night-soft'], TEXT],
+  ['accent-text', ['bg-2', 'bloom', 'accent-soft'], TEXT], ['text', ['bg-2', 'bloom'], TEXT],
+  ['text-3', ['bg-2', 'bloom'], TEXT],
+);
 
 let fails = 0;
 for (const [th, vars0] of Object.entries(themes)) {

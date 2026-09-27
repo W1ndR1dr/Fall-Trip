@@ -16,12 +16,21 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: var(--page-bottom);
+  /* Focus is never hidden under the bars (WCAG 2.4.11): keyboard focus and
+     scrollIntoView keep targets clear of the nav bar, tab bar and scrim. */
+  scroll-padding-top: calc(var(--sat) + var(--navbar-h) + 16px);
+  scroll-padding-bottom: calc(var(--page-bottom) + 8px);
 }
 .page::-webkit-scrollbar {
   display: none;
 }
 .page[data-dock] {
   padding-bottom: calc(var(--page-bottom) + 72px);
+  scroll-padding-bottom: calc(var(--page-bottom) + 80px);
+}
+/* Headings take focus after navigation (for VoiceOver); no ring for that. */
+h1[tabindex='-1']:focus {
+  outline: none;
 }
 .page-sky {
   position: absolute;
@@ -65,6 +74,7 @@
   max-width: 34em;
 }
 .page-dock {
+  /* Above the page's own tab scrim (90), below the frame's push dim (99). */
   position: absolute;
   z-index: 95;
   left: 0;
@@ -74,6 +84,14 @@
   display: flex;
   justify-content: center;
   pointer-events: none;
+}
+/* The strong material for a dock's content (the devotion stepper): the
+   opaque sheet color and the float shadow, no blur (blur is for the bars). */
+.dock-surface {
+  padding: 5px;
+  border-radius: calc(var(--r-seg) + 5px);
+  background: var(--bg-sheet);
+  box-shadow: var(--shadow-float);
 }
 .page-dock > * {
   pointer-events: auto;
@@ -123,7 +141,8 @@
   justify-content: center;
 }
 .navbar-title {
-  font: 600 calc(17rem / 17) / 1.2 var(--font-sans);
+  /* Bar chrome grows with Dynamic Type only up to a cap, like iOS's bars. */
+  font: 600 min(calc(17rem / 17), 22px) / 1.2 var(--font-sans);
   letter-spacing: -0.02em;
   color: var(--text);
   white-space: nowrap;
@@ -136,11 +155,11 @@
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  height: 36px;
-  padding: 0 13px 0 7px;
+  min-height: 36px;
+  padding: 0.3em 13px 0.3em 7px;
   margin-left: -2px;
-  border-radius: 18px;
-  font: 600 calc(15rem / 17) / 1 var(--font-sans);
+  border-radius: 999px;
+  font: 600 min(calc(15rem / 17), 20px) / 1 var(--font-sans);
   letter-spacing: -0.01em;
   color: var(--text);
   background: var(--fill-2);
@@ -163,6 +182,9 @@
   margin-top: 22px;
 }
 .section-head {
+  /* Above the next card so the action link keeps its full 44 pt box. */
+  position: relative;
+  z-index: 1;
   padding: 0 calc(var(--gutter-text) + 0px);
   margin-bottom: 8px;
 }
@@ -335,21 +357,24 @@ button.surface {
   pointer-events: none;
 }
 .btn-sm {
-  height: 32px;
-  padding: 0 12px;
+  min-height: 32px;
+  padding: 0.35em 12px;
+  line-height: 1.15;
   font-size: calc(13.5rem / 17);
   gap: 5px;
 }
 .btn-md {
-  height: 40px;
-  padding: 0 16px;
+  min-height: 40px;
+  padding: 0.45em 16px;
+  line-height: 1.15;
   font-size: calc(14.5rem / 17);
 }
 .btn-lg {
-  height: 50px;
-  padding: 0 22px;
+  min-height: 50px;
+  padding: 0.55em 22px;
+  line-height: 1.15;
   font-size: calc(16rem / 17);
-  border-radius: 25px;
+  border-radius: 999px;
 }
 .btn-sm:has(.btn-icon:first-child) {
   padding-left: 10px;
@@ -440,9 +465,9 @@ button.surface {
   height: 44px;
 }
 .icon-btn-glass {
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(16px) saturate(170%);
-  backdrop-filter: blur(16px) saturate(170%);
+  /* A solid tint, not a second backdrop blur: it usually sits inside the
+     nav bar's glass, and blur is reserved for the bars themselves. */
+  background: var(--glass-strong);
   box-shadow: 0 0 0 0.5px var(--glass-line), 0 1px 0 var(--hi) inset;
   color: var(--text-2);
 }
@@ -465,6 +490,12 @@ button.surface {
 .icon-btn[aria-pressed='true'] {
   background: var(--text);
   color: var(--bg-2);
+}
+/* Night vision: no solid ink patches (the brightest thing on screen). */
+[data-theme='night'] :is(.chip-selected, .icon-btn[aria-pressed='true'], .toast-action) {
+  background: var(--accent-soft);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--accent-line) inset;
 }
 
 .ext-link {
@@ -511,7 +542,11 @@ button.surface {
 }
 .row-li:has(.row-has-lead) + .row-li::before,
 .row-li + .row-li:has(.row-has-lead)::before {
-  left: 60px;
+  left: 58px;
+}
+/* Check rows: the text starts after the 24 px check + 12 gap. */
+.row-li:has(.check-row) + .row-li::before {
+  left: 52px;
 }
 .row {
   position: relative;
@@ -580,9 +615,10 @@ button.surface {
 
 /* ---------- Segmented ----------------------------------------------------- */
 .seg {
+  --seg-pad: 3px;
   position: relative;
   display: grid;
-  padding: 3px;
+  padding: var(--seg-pad);
   border-radius: var(--r-seg);
   background: var(--fill);
   box-shadow: 0 0 0 0.5px var(--line) inset;
@@ -590,9 +626,10 @@ button.surface {
 }
 .seg-thumb {
   position: absolute;
-  left: 3px;
-  top: 3px;
-  bottom: 3px;
+  left: var(--seg-pad);
+  top: var(--seg-pad);
+  bottom: var(--seg-pad);
+  width: calc((100% - 2 * var(--seg-pad)) / var(--seg-n, 2));
   border-radius: var(--r-seg-inner);
   background: var(--seg-thumb);
   box-shadow: var(--seg-thumb-shadow);
@@ -628,24 +665,23 @@ button.surface {
   outline-offset: -2px;
 }
 .seg-md .seg-btn {
-  height: 34px;
+  min-height: 34px;
   font-size: calc(14.5rem / 17);
-  padding: 0 8px;
+  line-height: 1.15;
+  padding: 0.3em 8px;
 }
 .seg-sm {
+  --seg-pad: 2px;
   border-radius: 10px;
-  padding: 2px;
 }
 .seg-sm .seg-thumb {
-  left: 2px;
-  top: 2px;
-  bottom: 2px;
   border-radius: 8px;
 }
 .seg-sm .seg-btn {
-  height: 28px;
+  min-height: 28px;
   font-size: calc(12.5rem / 17);
-  padding: 0 11px;
+  line-height: 1.15;
+  padding: 0.25em 11px;
 }
 
 /* ---------- Switch -------------------------------------------------------- */
@@ -697,15 +733,18 @@ button.surface {
 }
 
 /* ---------- Checkbox ------------------------------------------------------ */
+/* Ordinary checks are ink (a checked box is not an event). Amber or a kid
+   color only when `color` is passed: the hunt and "found" states. */
 .check {
-  --check-fill: var(--accent);
+  --check-fill: var(--text);
+  --check-tick: var(--bg-2);
   position: relative;
   flex: none;
   display: inline-grid;
   place-items: center;
   border-radius: 50%;
   box-shadow: 0 0 0 1.5px var(--text-3) inset;
-  color: var(--on-accent);
+  color: var(--check-tick);
   transition: box-shadow 0.2s;
 }
 .check[data-on] {
@@ -771,8 +810,9 @@ button.surface {
 .field-input::placeholder {
   color: var(--text-4);
 }
-.field-input:focus {
-  box-shadow: 0 0 0 1.5px var(--text-2) inset;
+.field-input:focus,
+.field-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--focus) inset;
   outline: none;
 }
 .field-area {
@@ -788,10 +828,10 @@ button.surface {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  height: 20px;
-  padding: 0 7px;
+  min-height: 20px;
+  padding: 0.28em 7px;
   border-radius: var(--r-tag);
-  font: 700 10.5px/1 var(--font-sans);
+  font: 700 calc(10.5rem / 17) / 1.1 var(--font-sans);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -836,13 +876,15 @@ button.surface {
   transition: background-color 0.18s, color 0.18s;
 }
 .chip-sm {
-  height: 28px;
-  padding: 0 11px;
+  min-height: 28px;
+  padding: 0.3em 11px;
+  line-height: 1.15;
   font-size: calc(13rem / 17);
 }
 .chip-md {
-  height: 34px;
-  padding: 0 14px;
+  min-height: 34px;
+  padding: 0.35em 14px;
+  line-height: 1.15;
   font-size: calc(14rem / 17);
 }
 .chip:has(svg:first-child).chip-sm {
@@ -894,12 +936,12 @@ button.surface {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  height: 24px;
-  padding: 0 10px 0 8px;
-  border-radius: 12px;
+  min-height: 24px;
+  padding: 0.3em 10px 0.3em 8px;
+  border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent-text);
-  font: 700 11.5px/1 var(--font-sans);
+  font: 700 calc(11.5rem / 17) / 1.1 var(--font-sans);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   box-shadow: 0 0 0 0.5px var(--accent-line) inset;
@@ -938,13 +980,13 @@ button.surface {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 26px;
-  padding: 0 10px 0 8px;
-  border-radius: 13px;
+  min-height: 26px;
+  padding: 0.3em 10px 0.3em 8px;
+  border-radius: 999px;
   background: var(--ember-soft);
   color: var(--ember);
   box-shadow: 0 0 0 0.5px var(--ember-line) inset;
-  font: 650 calc(13rem / 17) / 1 var(--font-sans);
+  font: 650 calc(13rem / 17) / 1.15 var(--font-sans);
   letter-spacing: -0.005em;
   white-space: nowrap;
 }
@@ -957,13 +999,13 @@ button.surface {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  height: 26px;
-  padding: 0 11px 0 9px;
-  border-radius: 13px;
+  min-height: 26px;
+  padding: 0.3em 11px 0.3em 9px;
+  border-radius: 999px;
   background: var(--fill-2);
   color: var(--text-2);
   box-shadow: 0 0 0 0.5px var(--line) inset;
-  font: 600 calc(12.5rem / 17) / 1 var(--font-sans);
+  font: 600 calc(12.5rem / 17) / 1.15 var(--font-sans);
   white-space: nowrap;
 }
 
@@ -1075,22 +1117,36 @@ button.surface {
   transition: background-color 0.2s, box-shadow 0.2s;
 }
 .kid-chip-sm {
-  height: 38px;
-  padding: 0 14px 0 5px;
-  border-radius: 19px;
+  min-height: 38px;
+  padding: 5px 14px 5px 5px;
+  border-radius: 999px;
   font-size: calc(13.5rem / 17);
   font-weight: 500;
+}
+.kid-chip-sm.chip-tappable::before,
+.kid-chip-sm[role='radio']::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 44px;
+  transform: translateY(-50%);
 }
 .kid-chip-sm b {
   color: var(--text);
   font-weight: 600;
 }
 .kid-chip-lg {
-  height: 64px;
-  padding: 0 12px;
+  min-height: 64px;
+  padding: 8px 12px;
   border-radius: 20px;
   gap: 10px;
   min-width: 0;
+}
+.kid-picker {
+  display: grid;
+  gap: 8px;
 }
 .kid-chip-text {
   display: flex;
@@ -1121,6 +1177,11 @@ button.surface {
 }
 
 /* ---------- Sheet (Vaul) -------------------------------------------------- */
+/* While a sheet is open (html[data-sheet-open], set by Sheet) the scaled-back
+   page sits on black, so the card stack reads with depth. */
+html[data-sheet-open] body {
+  background: #000;
+}
 .sheet-overlay {
   position: fixed;
   inset: 0;
@@ -1203,12 +1264,19 @@ button.surface {
 }
 
 /* ---------- Toast --------------------------------------------------------- */
+/* html[data-dock] is set by the visible Page when it has a dock (a class,
+   not :has(), so frame role changes never restyle the whole document). */
+html[data-dock] {
+  --dock-h: 66px;
+}
 .toaster {
   position: absolute;
   z-index: 300;
   left: 0;
   right: 0;
-  bottom: calc(var(--tabbar-bottom) + var(--tabbar-h) + 12px);
+  /* above the tab bar, and above a page's dock when there is one */
+  bottom: calc(var(--tabbar-bottom) + var(--tabbar-h) + 12px + var(--dock-h, 0px));
+  transition: bottom 0.3s var(--ease-out);
   display: flex;
   justify-content: center;
   padding: 0 max(var(--gutter), var(--sal));
@@ -1224,11 +1292,11 @@ button.surface {
   min-height: 56px;
   padding: 10px 10px 10px 16px;
   border-radius: 20px;
-  background: var(--glass-strong);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
+  /* The opaque sheet color, no blur (blur is for the bars only). */
+  background: var(--bg-sheet);
   box-shadow: var(--shadow-float);
   color: var(--text);
+  touch-action: none;
 }
 .toast-icon {
   flex: none;
@@ -1250,13 +1318,13 @@ button.surface {
 .toast-action {
   position: relative;
   flex: none;
-  height: 36px;
-  padding: 0 16px;
+  min-height: 36px;
+  padding: 0.3em 16px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 999px;
   background: var(--text);
   color: var(--bg-2);
-  font: 600 calc(14rem / 17) / 1 var(--font-sans);
+  font: 600 calc(14rem / 17) / 1.15 var(--font-sans);
   cursor: pointer;
 }
 .toast-action::before {
@@ -1281,6 +1349,57 @@ button.surface {
   content: '';
   position: absolute;
   inset: -4px;
+}
+
+/* ---------- Night vision offer -------------------------------------------- */
+.nv-offer-wrap {
+  margin: 0 max(var(--gutter), var(--sar)) 0 max(var(--gutter), var(--sal));
+}
+.nv-offer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 16px 10px 12px;
+  border: 0;
+  border-radius: var(--r-card);
+  background: var(--bg-2);
+  box-shadow: 0 0 0 1px var(--night-soft), var(--shadow-card);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+.nv-offer[data-pressed] {
+  background: var(--bg-3);
+}
+.nv-offer-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-well);
+  background: var(--night-soft);
+  color: var(--night);
+}
+.nv-offer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.nv-offer-title {
+  font: 600 calc(15.5rem / 17) / 1.25 var(--font-sans);
+  letter-spacing: -0.011em;
+}
+.nv-offer-sub {
+  font: 400 calc(13rem / 17) / 1.35 var(--font-sans);
+  color: var(--text-3);
+}
+.nv-off {
+  margin: 0;
 }
 
 /* ---------- Fold ---------------------------------------------------------- */

@@ -51,14 +51,14 @@ const explore = () => import('../screens/activities/Explore');
 export const ROUTES: RouteDef[] = [
   { path: '/', load: async () => ({ default: Today }), Component: Today },
 
-  route('/plan', plan, () => 'plan'),
-  route('/plan/:day', plan, () => 'plan'),
+  // One route per page: the day (and the Explore filter) are optional params,
+  // so switching them re-renders the same screen in place.
+  route('/plan/:day?', plan, () => 'plan'),
   route('/route/:id', () => import('../screens/plan/RouteOption')),
   route('/pack', () => import('../screens/plan/Packing')),
   route('/before', () => import('../screens/plan/BeforeYouGo')),
 
-  route('/explore', explore, () => 'explore'),
-  route('/explore/:filter', explore, () => 'explore'),
+  route('/explore/:filter?', explore, () => 'explore'),
   route('/do/:id', () => import('../screens/activities/Activity')),
   route('/color', () => import('../screens/activities/ColorReport')),
   route('/food', () => import('../screens/activities/Food')),
@@ -84,25 +84,27 @@ export const ROUTES: RouteDef[] = [
   route('/about', () => import('../screens/more/About')),
   route('/install', () => import('../screens/more/Install')),
 
-  // Review only: every primitive in every state. Not in the tab bar or the offline list.
+  // Review only: every primitive in every state. Not in the tab bar, the
+  // offline list, the precache or the idle preload.
   route('/_kit', () => import('../screens/_kit/Kit')),
 ];
 
 // Guard: the contract in src/routes.ts and this table must agree.
-if (import.meta.env.DEV) {
-  const here = new Set(ROUTES.map((r) => r.path));
-  const missing = ROUTE_PATHS.filter((p) => !here.has(p));
-  if (missing.length) console.warn('routes.tsx is missing', missing);
-}
-
-// Route-pattern matching mirrors wouter's (regexparam-style ":param" segments).
+// Route-pattern matching mirrors wouter's (regexparam-style ":param" and
+// optional ":param?" segments).
 function toRegex(pattern: string) {
   const keys: string[] = [];
-  const src = pattern.replace(/\/:(\w+)/g, (_, k) => {
+  const src = pattern.replace(/\/:(\w+)(\?)?/g, (_, k, opt) => {
     keys.push(k);
-    return '/([^/]+)';
+    return opt ? '(?:/([^/]+))?' : '/([^/]+)';
   });
   return { pattern: new RegExp(`^${src}/?$`, 'i'), keys };
+}
+if (import.meta.env.DEV) {
+  // Every contract path (with sample params) must resolve to a route.
+  const sample = (p: string) => p.replace(/:\w+/g, 'x');
+  const missing = ROUTE_PATHS.filter((p) => !ROUTES.some((r) => matchRoute(toRegex, r.path, sample(p))[0]));
+  if (missing.length) console.warn('routes.tsx is missing', missing);
 }
 setPreloader((path) => {
   const r = ROUTES.find((x) => matchRoute(toRegex, x.path, path)[0]);
@@ -111,7 +113,7 @@ setPreloader((path) => {
 
 /** Warm every screen chunk once the app is idle (they are precached anyway). */
 export function preloadScreens() {
-  const go = () => ROUTES.forEach((r) => r.load().catch(() => {}));
+  const go = () => ROUTES.forEach((r) => (import.meta.env.DEV || r.path !== '/_kit') && r.load().catch(() => {}));
   const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
   if (w.requestIdleCallback) w.requestIdleCallback(go, { timeout: 3000 });
   else setTimeout(go, 1500);

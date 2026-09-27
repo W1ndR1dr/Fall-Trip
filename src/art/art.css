@@ -6,15 +6,30 @@
     overflow: hidden;
     contain: layout paint;
   }
+  /* Two stacked layers: the relief (which alone carries the edge fade) and
+     the overlays (route, stops, labels: never faded). A camera transforms
+     each layer's stage. */
+  .terrain-layer,
+  .terrain-stage {
+    position: absolute;
+    inset: 0;
+  }
+  .terrain-layer {
+    overflow: hidden;
+  }
   .terrain-svg {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;
+    overflow: visible;
   }
   .terrain-relief {
     image-rendering: auto;
+  }
+  /* The dark glow goes out after that day's Dark time. */
+  [data-after-dark] .map-glow {
+    display: none;
   }
   .terrain-fade-y {
     -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 80%, transparent 100%);

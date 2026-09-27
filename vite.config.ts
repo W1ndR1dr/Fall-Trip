@@ -2,12 +2,30 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import type { Plugin } from 'vite';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 // Relative base: the app is served from https://<user>.github.io/Fall-Trip/
 // and routes live in the hash, so the document is always ./index.html.
 const built = new Date().toISOString();
+
+// Preload the two fonts every screen paints with first (Inter UI, Newsreader
+// roman titles), so a cold start doesn't paint fallbacks and reflow.
+function preloadFonts(): Plugin {
+  const want = [/inter-latin-opsz-normal.*\.woff2$/, /newsreader-latin-opsz-normal.*\.woff2$/];
+  return {
+    name: 'fall-trip:preload-fonts',
+    apply: 'build',
+    transformIndexHtml: {
+      order: 'post',
+      handler(_html, ctx) {
+        const files = Object.keys(ctx.bundle ?? {}).filter((f) => want.some((re) => re.test(f)));
+        return files.map((f) => ({ tag: 'link', attrs: { rel: 'preload', as: 'font', type: 'font/woff2', href: './' + f, crossorigin: '' }, injectTo: 'head' as const }));
+      },
+    },
+  };
+}
 
 export default defineConfig({
   base: './',
@@ -18,10 +36,12 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    preloadFonts(),
     VitePWA({
       registerType: 'prompt',
       injectRegister: false,
-      includeAssets: ['robots.txt', 'icons/*.png', 'icons/*.svg'],
+      // The globs below already cover the icons; don't list them twice.
+      includeManifestIcons: false,
       manifest: {
         id: './',
         name: 'Fall Trip',
@@ -41,7 +61,10 @@ export default defineConfig({
       },
       workbox: {
         // Precache the whole app: every screen must work in Airplane Mode.
-        globPatterns: ['**/*.{js,css,html,woff2,png,svg,webp,jpg,json,txt,webmanifest}'],
+        // (public/ files are covered by these globs; no includeAssets needed.)
+        globPatterns: ['**/*.{js,css,html,woff2,png,svg,webp,jpg,json,txt}'], // the plugin adds the manifest itself
+        // The review-only kit (#/_kit) still loads online, but isn't precached.
+        globIgnores: ['**/Kit-*.js'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: 'index.html',
         cleanupOutdatedCaches: true,
@@ -50,6 +73,6 @@ export default defineConfig({
     }),
   ],
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
-  // The main chunk is React + Motion + Vaul (~160 KB gzip), precached once.
+  // The main chunk is React + Motion + the shell; Vaul loads with the sheet.
   build: { target: 'es2022', assetsInlineLimit: 0, sourcemap: false, chunkSizeWarningLimit: 700 },
 });

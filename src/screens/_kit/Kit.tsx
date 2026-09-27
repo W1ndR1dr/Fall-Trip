@@ -3,7 +3,7 @@
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import type { ScreenProps } from '@/app/routes';
-import { FRIDAY_DRIVE, FRIDAY_DRIVE_EAST, Leaf, MapLabel, RouteLine, SPECIMEN_IDS, Specimen, StopDot, Terrain, WaterLabel, cropAround, stop, stopFeet } from '@/art';
+import { FRIDAY_DRIVE, FRIDAY_DRIVE_EAST, Leaf, MapLabel, RouteLine, SPECIMEN_IDS, Specimen, StopDot, Terrain, WaterLabel, cameraFor, cropAround, stop, stopFeet, useCamera, type Crop } from '@/art';
 import { setNightVision, setThemePref, useTheme, type ThemePref } from '@/lib/theme';
 import {
   Button,
@@ -20,6 +20,7 @@ import {
   IconWell,
   KidAvatar,
   KidChip,
+  KidPicker,
   LeaveBy,
   ListGroup,
   ListRow,
@@ -27,6 +28,7 @@ import {
   LivePill,
   MapsButton,
   NavRow,
+  NightVisionOffer,
   NumberRoller,
   OfflineChip,
   Page,
@@ -39,6 +41,7 @@ import {
   Switch,
   Tag,
   TextField,
+  announce,
   fadeUp,
   stagger,
   toast,
@@ -105,10 +108,16 @@ export default function Kit(_props: ScreenProps) {
   const [name, setName] = useState('');
   const [chip, setChip] = useState('All');
   const [sheet, setSheet] = useState(false);
-  const order = useSettledOrder(PACK, (p) => done.includes(p));
+  const [dock, setDock] = useState(false);
+  const [step, setStep] = useState<'look' | 'read' | 'wonder' | 'pray' | 'do'>('read');
+  const order = useSettledOrder(PACK, (p) => p, (p) => done.includes(p));
 
   const tioga = stop('route', 'tioga')!;
   const east = cropAround('eastside', [82, 296], 240, 358 / 150);
+  const BASE: Crop = [0, 52, 420, 377];
+  const SHOTS: Record<string, Crop> = { Overview: BASE, 'Tioga Pass': cropAround('route', tioga, 210, 420 / 377), 'Mono Lake': cropAround('route', stop('route', 'monolake')!, 170, 420 / 377) };
+  const cam = useCamera(cameraFor(BASE, BASE));
+  const [shot, setShot] = useState('Overview');
 
   return (
     <Page
@@ -119,6 +128,24 @@ export default function Kit(_props: ScreenProps) {
       actions={<IconButton icon={GearSix} label="Settings" href="/settings" />}
       sky="dawn"
       width="wide"
+      dock={
+        dock ? (
+          <div className="dock-surface">
+            <Segmented
+              label="Section"
+              value={step}
+              onChange={setStep}
+              options={[
+                { value: 'look', label: 'Look' },
+                { value: 'read', label: 'Read' },
+                { value: 'wonder', label: 'Wonder' },
+                { value: 'pray', label: 'Pray' },
+                { value: 'do', label: 'Do' },
+              ]}
+            />
+          </div>
+        ) : undefined
+      }
     >
       <Section title="Theme">
         <div className="flex flex-col gap-3 gutter">
@@ -136,7 +163,11 @@ export default function Kit(_props: ScreenProps) {
         <div className="mt-3">
           <ListGroup>
             <ListRow icon={MoonStars} title="Night vision" subtitle="Red and dim, for stargazing" trailing={<Switch checked={nightVision} onChange={setNightVision} label="Night vision" />} />
+            <ListRow icon={DotsThree} title="Page dock" subtitle="The devotion stepper's slot above the tab bar" trailing={<Switch checked={dock} onChange={setDock} label="Page dock" />} />
           </ListGroup>
+        </div>
+        <div className="mt-3">
+          <NightVisionOffer force />
         </div>
       </Section>
 
@@ -235,7 +266,7 @@ export default function Kit(_props: ScreenProps) {
 
       <Section title="Now" action={<a href="#/plan/sat">Saturday plan <CaretRight size={14} weight="bold" /></a>}>
         <LiveCard>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
             <LivePill />
             <span className="t-footnote num">Since 9:15</span>
             <span className="ml-auto">
@@ -245,7 +276,7 @@ export default function Kit(_props: ScreenProps) {
           <h3 className="t-title-1 mt-2">Lundy beaver ponds</h3>
           <p className="t-footnote mt-1 text-text-2">1–2 mi, gentle · No restrooms at trailhead</p>
           <ProgressBar className="mt-4" value={0.16} label="Time at Lundy" start={<>15 min in</>} end={<b>1 hr 15 left</b>} valueText="15 minutes in, 1 hour 15 left" />
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             <MapsButton variant="primary" q="Lundy Canyon Trailhead, Lundy, CA" place="Lundy Canyon" />
             <Button icon={BookOpenText}>Devotion</Button>
           </div>
@@ -294,7 +325,7 @@ export default function Kit(_props: ScreenProps) {
           <div className="flex items-center gap-3">
             <Segmented size="sm" label="Translation" value={tr} onChange={setTr} options={[{ value: 'ESV', label: 'ESV' }, { value: 'NIV', label: 'NIV' }]} />
             <Checkbox checked={sw} onChange={setSw} label="Checkbox" />
-            <Checkbox checked={!sw} onChange={(v) => setSw(!v)} label="Checkbox 2" color="var(--kid-3)" />
+            <Checkbox checked={!sw} onChange={(v) => setSw(!v)} label="Checkbox 2" color="var(--kid-3)" tickColor="var(--kid-3-ink)" />
             <Switch checked={sw} onChange={setSw} label="Switch" />
           </div>
           <TextField label="Kid 1's name" value={name} onChange={setName} placeholder="Kid 1" hint="Stays on this device." />
@@ -355,7 +386,15 @@ export default function Kit(_props: ScreenProps) {
             <Pips total={8} filled={3} label="Chapter 3 of 8" />
           </div>
           <div className="flex gap-2">
-            <Button size="sm" onClick={() => setFound((f) => Math.min(11, f + 1))} icon={LeafIcon}>
+            <Button
+              size="sm"
+              onClick={() => {
+                const f = Math.min(11, found + 1);
+                setFound(f);
+                announce(`${f} of 11 found`);
+              }}
+              icon={LeafIcon}
+            >
               Find one
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setFound(0)}>
@@ -366,11 +405,7 @@ export default function Kit(_props: ScreenProps) {
       </Section>
 
       <Section title="Kids">
-        <div className="grid grid-cols-3 gap-2 gutter">
-          {['Kid 1', 'Kid 2', 'Kid 3'].map((k, i) => (
-            <KidChip key={k} index={i} name={k} detail={`${[6, 4, 0][i]} found`} size="lg" active={kid === i} onClick={() => setKid(i)} />
-          ))}
-        </div>
+        <KidPicker className="gutter" label="Whose hunt" value={kid} onChange={setKid} names={['Kid 1', 'Kid 2', 'Kid 3']} details={['6 found', '4 found', '0 found']} progress={[6 / 11, 4 / 11, 0]} />
         <div className="mt-3 flex flex-wrap items-center gap-2 gutter">
           <KidChip index={1} name="Kid 2" detail="reads" active />
           <KidChip index={2} name="Kid 3" detail="prays" />
@@ -411,7 +446,19 @@ export default function Kit(_props: ScreenProps) {
       </Section>
 
       <Section title="The drive" serif note="Relief pre-rendered per theme; route, stops and labels are live SVG.">
-        <Terrain region="route" crop={[0, 52, 420, 377]} fade="y" label="The drive from the Bay Area to Mammoth Lakes">
+        <div className="mb-2 gutter">
+          <Segmented
+            size="sm"
+            label="Camera"
+            value={shot}
+            onChange={(v) => {
+              setShot(v);
+              cam.to(cameraFor(BASE, SHOTS[v]));
+            }}
+            options={Object.keys(SHOTS).map((k) => ({ value: k, label: k }))}
+          />
+        </div>
+        <Terrain region="route" crop={BASE} camera={cam} fade="y" label="The drive from the Bay Area to Mammoth Lakes">
           <RouteLine points={FRIDAY_DRIVE} />
           <StopDot at={stop('route', 'craneflat')!} />
           <StopDot at={stop('route', 'olmsted')!} />
@@ -445,12 +492,18 @@ export default function Kit(_props: ScreenProps) {
       </Section>
 
       <Section title="Specimens" note="Outline to look for; full fall color when found.">
-        <div className="grid grid-cols-4 gap-2 gutter sm:grid-cols-7">
-          {SPECIMEN_IDS.map((id, i) => (
-            <Card key={id} inset={false} pad="sm" className="flex aspect-square items-center justify-center">
-              <div className="h-full w-full">
-                <Specimen id={id} found={i % 2 === 0} />
+        <div className="grid grid-cols-2 gap-2 gutter sm:grid-cols-4">
+          {SPECIMEN_IDS.map((id) => (
+            <Card key={id} inset={false} pad="sm" className="flex flex-col gap-1">
+              <div className="grid grid-cols-2 gap-1">
+                <div className="aspect-square">
+                  <Specimen id={id} />
+                </div>
+                <div className="aspect-square">
+                  <Specimen id={id} found />
+                </div>
               </div>
+              <span className="t-caption text-center">{id}</span>
             </Card>
           ))}
         </div>

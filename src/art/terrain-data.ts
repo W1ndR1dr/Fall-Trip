@@ -254,5 +254,8 @@ export const REGIONS = {
 /** SVG matrix(a b c d e f) mapping eastside units into route units. */
 export const EAST_TO_ROUTE = [0.51012,0,0,0.51077,22.10526,27.9662] as const;
 
-/** Relief raster resolution (pixels per map unit) per region. */
-export const RELIEF_SCALE = { route: 2.5, eastside: 4 } as const;
+/** Relief raster resolution (pixels per map unit) per region and theme. */
+export const RELIEF_SCALE = {"route":{"light":5,"dark":5,"night":2.5},"eastside":{"light":6,"dark":6,"night":4}} as const;
+
+/** Relief tiles per region and theme, in map units (they overlap by 2 px). */
+export const RELIEF_TILES = {"route":{"light":[{"f":"relief-route-light-0.webp","x":0,"y":0,"w":420,"h":414},{"f":"relief-route-light-1.webp","x":0,"y":413.2,"w":420,"h":414.6},{"f":"relief-route-light-2.webp","x":0,"y":827,"w":420,"h":414}],"dark":[{"f":"relief-route-dark-0.webp","x":0,"y":0,"w":420,"h":414},{"f":"relief-route-dark-1.webp","x":0,"y":413.2,"w":420,"h":414.6},{"f":"relief-route-dark-2.webp","x":0,"y":827,"w":420,"h":414}],"night":[{"f":"relief-route-night-0.webp","x":0,"y":0,"w":420,"h":1241.2}]},"eastside":{"light":[{"f":"relief-eastside-light-0.webp","x":0,"y":0,"w":260.333,"h":263.833},{"f":"relief-eastside-light-1.webp","x":259.667,"y":0,"w":260.333,"h":263.833},{"f":"relief-eastside-light-2.webp","x":0,"y":263.167,"w":260.333,"h":263.833},{"f":"relief-eastside-light-3.webp","x":259.667,"y":263.167,"w":260.333,"h":263.833}],"dark":[{"f":"relief-eastside-dark-0.webp","x":0,"y":0,"w":260.333,"h":263.833},{"f":"relief-eastside-dark-1.webp","x":259.667,"y":0,"w":260.333,"h":263.833},{"f":"relief-eastside-dark-2.webp","x":0,"y":263.167,"w":260.333,"h":263.833},{"f":"relief-eastside-dark-3.webp","x":259.667,"y":263.167,"w":260.333,"h":263.833}],"night":[{"f":"relief-eastside-night-0.webp","x":0,"y":0,"w":520,"h":527}]}} as const;

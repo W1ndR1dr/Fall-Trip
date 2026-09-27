@@ -80,8 +80,10 @@ for (const r of routes) {
 // The terrain rasters (SVG <image>, not <img>) must be cached too, every theme.
 const relief = await page.evaluate(async () => {
   const bad = [];
-  for (const r of ['route', 'eastside']) for (const t of ['light', 'dark', 'night']) {
-    const u = `img/topo/relief-${r}-${t}.webp`;
+  // Tiles per theme (see RELIEF_TILES in src/art/terrain-data.ts).
+  const n = { route: { light: 3, dark: 3, night: 1 }, eastside: { light: 4, dark: 4, night: 1 } };
+  for (const r of ['route', 'eastside']) for (const t of ['light', 'dark', 'night']) for (let i = 0; i < n[r][t]; i++) {
+    const u = `img/topo/relief-${r}-${t}-${i}.webp`;
     try { if (!(await fetch(u)).ok) bad.push(u); } catch { bad.push(u); }
   }
   return bad;

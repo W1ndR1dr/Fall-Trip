@@ -178,15 +178,20 @@ function blob(cx: number, cy: number, rx: number, ry: number, seed: number, n = 
 // ---------------------------------------------------------------------------
 // Shapes (computed once)
 
+const LEAN = (-12 * Math.PI) / 180;
+
 const SHAPES = {
-  aspen: pinnate({ L: 60, W: 29, a: 0.34, b: 0.72, tipK: 0.18, kind: 'crenate', n: 20, d: 0.05, veins: 5, spread: 0.2, angle: 0.3, cx: 40, cy: 80, stem: 0.28 }),
-  cottonwood: pinnate({ L: 74, W: 20, a: 0.3, b: 1.35, kind: 'serrate', n: 34, d: 0.035, veins: 7, spread: 0.14, angle: 0.42, cx: 36, cy: 84, stem: 0.16, bend: 0.03 }),
+  // Leaves share one lean (-12°, tip to the upper left, into the light);
+  // the long willow runs corner to corner. Specimen() then normalizes every
+  // drawing to one optical size.
+  aspen: pinnate({ L: 60, W: 29, a: 0.34, b: 0.72, tipK: 0.18, kind: 'crenate', n: 20, d: 0.05, veins: 5, spread: 0.2, angle: LEAN, cx: 48, cy: 80, stem: 0.28 }),
+  cottonwood: pinnate({ L: 74, W: 20, a: 0.3, b: 1.35, kind: 'serrate', n: 34, d: 0.035, veins: 7, spread: 0.14, angle: LEAN, cx: 48, cy: 84, stem: 0.16, bend: 0.03 }),
   willow: pinnate({ L: 80, W: 9.5, a: 0.85, b: 1.05, kind: 'serrate', n: 44, d: 0.05, veins: 10, spread: 0.07, curve: 0.2, angle: 0.62, cx: 30, cy: 82, stem: 0.08, bend: 0.06 }),
-  birch: pinnate({ L: 58, W: 20, a: 0.5, b: 1.05, kind: 'serrate', n: 10, d: 0.13, n2: 30, d2: 0.05, veins: 6, spread: 0.13, angle: 0.3, cx: 42, cy: 78, stem: 0.22 }),
-  red: maple({ cx: 48, cy: 46, R: 38, angle: -0.18 }),
+  birch: pinnate({ L: 58, W: 20, a: 0.5, b: 1.05, kind: 'serrate', n: 10, d: 0.13, n2: 30, d2: 0.05, veins: 6, spread: 0.13, angle: LEAN, cx: 48, cy: 78, stem: 0.22 }),
+  red: maple({ cx: 48, cy: 46, R: 38, angle: LEAN * 0.6 }),
   big: pinnate({ L: 78, W: 30, a: 0.4, b: 1.15, kind: 'serrate', n: 30, d: 0.03, veins: 7, spread: 0.15, angle: 0.28, cx: 34, cy: 88, stem: 0.1 }),
   bigSmall: pinnate({ L: 20, W: 8.5, a: 0.42, b: 0.95, kind: 'crenate', n: 10, d: 0.05, veins: 3, spread: 0.2, angle: -0.35, cx: 80, cy: 90, stem: 0.25 }),
-  heart: heart({ cx: 48, cy: 52, s: 1.8, angle: 0.22 }),
+  heart: heart({ cx: 48, cy: 52, s: 1.8, angle: LEAN }),
   // Explainer leaf: a straight, centered aspen.
   explainer: pinnate({ L: 66, W: 32, a: 0.34, b: 0.72, tipK: 0.18, kind: 'crenate', n: 20, d: 0.05, veins: 5, spread: 0.2, angle: 0.12, cx: 44, cy: 82, stem: 0.24 }),
 };
@@ -364,21 +369,19 @@ function Granite({ found, uid }: { found: boolean; uid: string }) {
   );
 }
 
-const DAM_STICKS = (() => {
-  const r = rng(5);
-  const out: { x1: number; x2: number; y: number; a: number; c: string; w: number; x: number }[] = [];
-  for (let i = 0; i < 34; i++) {
-    const t = r();
-    const x = 12 + t * 72;
-    const h = 30 * Math.sin(Math.PI * t) * (0.55 + r() * 0.45);
-    const y = 66 - r() * h;
-    const len = 14 + r() * 18;
-    const a = (r() - 0.5) * 50;
-    const col = ['#7A4E2A', '#8E5E33', '#A2703F', '#6A4222'][Math.floor(r() * 4)];
-    out.push({ x1: f1(x - len / 2), x2: f1(x + len / 2), y: f1(y), a: f1(a), c: col, w: f1(2 + r() * 1.6), x: f1(x) });
-  }
-  return out;
-})();
+// Beaver dam: a low mound of crossing sticks (pale cut ends) on a water
+// line, and one chewed stump with the beaver's pencil point.
+const DAM_MOUND = 'M14 64 Q18 46 32 36 Q44 27 56 32 Q68 38 72 64 Z';
+const DAM_STICKS: { a: P2; b: P2; w: number; c: string }[] = [
+  { a: [14, 62], b: [44, 30], w: 5, c: '#7A4E2A' },
+  { a: [22, 44], b: [70, 60], w: 4.6, c: '#8E5E33' },
+  { a: [30, 34], b: [60, 58], w: 4.2, c: '#6A4222' },
+  { a: [26, 62], b: [66, 40], w: 4.8, c: '#A2703F' },
+  { a: [16, 54], b: [56, 36], w: 4, c: '#8E5E33' },
+  { a: [42, 28], b: [46, 62], w: 3.8, c: '#7A4E2A' },
+  { a: [50, 32], b: [72, 58], w: 4.4, c: '#6A4222' },
+];
+const STUMP = 'M73 64 L73.8 46 Q70.5 42 77.5 30 Q84.5 42 81.2 46 L82 64 Z';
 
 function Dam({ found, uid }: { found: boolean; uid: string }) {
   return (
@@ -388,24 +391,24 @@ function Dam({ found, uid }: { found: boolean; uid: string }) {
           <stop offset="0" stopColor="#7FA6B8" />
           <stop offset="1" stopColor="#4E7486" />
         </linearGradient>
-        <clipPath id={`${uid}-cp`}>
-          <path d="M10 68 Q48 30 86 68 Z" />
-        </clipPath>
+        <linearGradient id={`${uid}-st`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#B08253" />
+          <stop offset="1" stopColor="#7A5230" />
+        </linearGradient>
       </defs>
-      <path d="M10 68 Q48 30 86 68 Z" fill={found ? '#5A3A20' : OUT.fill} stroke={found ? '#3E2713' : OUT.stroke} strokeWidth={found ? 0.9 : 1.1} />
-      {found ? (
-        DAM_STICKS.map((s, i) => <line key={i} x1={s.x1} y1={s.y} x2={s.x2} y2={s.y} transform={`rotate(${s.a} ${s.x} ${s.y})`} stroke={s.c} strokeWidth={s.w} strokeLinecap="round" />)
-      ) : (
-        <g clipPath={`url(#${uid}-cp)`} opacity={0.45}>
-          {DAM_STICKS.filter((_, i) => i % 3 === 0).map((s, i) => (
-            <line key={i} x1={s.x1} y1={s.y} x2={s.x2} y2={s.y} transform={`rotate(${s.a} ${s.x} ${s.y})`} stroke={OUT.vein} strokeWidth={0.8} strokeLinecap="round" />
-          ))}
+      <path d={DAM_MOUND} fill={found ? '#4E331D' : OUT.fill} stroke={found ? '#3A2512' : OUT.stroke} strokeWidth={found ? 0.9 : 1.1} strokeLinejoin="round" />
+      {DAM_STICKS.map((k, i) => (
+        <g key={i}>
+          <line x1={k.a[0]} y1={k.a[1]} x2={k.b[0]} y2={k.b[1]} stroke={found ? k.c : OUT.stroke} strokeWidth={found ? k.w : 1.1} strokeLinecap="round" opacity={found ? 1 : 0.75} />
+          {found && <circle cx={k.b[0]} cy={k.b[1]} r={k.w * 0.42} fill="#E2C49A" />}
         </g>
-      )}
-      <path d="M74 66 L74 44 L77 36 L80 44 L80 66Z" fill={found ? '#E7D9BE' : OUT.fill} stroke={found ? '#8E6E45' : OUT.stroke} strokeWidth={found ? 0.9 : 1.1} strokeLinejoin="round" />
-      {found && <path d="M74 44 L77 36 L80 44" fill="#C9A676" />}
-      <rect x="4" y="66" width="88" height="20" rx="3" fill={found ? `url(#${uid}-w)` : OUT.fill} stroke={found ? 'none' : OUT.stroke} strokeWidth={1.1} />
-      <path d="M10 73h22M40 73h14M62 73h22M16 79h18M46 79h24" stroke={found ? '#CFE6EE' : OUT.vein} strokeWidth="1" strokeLinecap="round" opacity={found ? 0.7 : 0.45} />
+      ))}
+      {/* The chewed stump: gnawed to a point, fresh pale wood in the cut. */}
+      <path d={STUMP} fill={found ? `url(#${uid}-st)` : OUT.fill} stroke={found ? '#5A3A1E' : OUT.stroke} strokeWidth={found ? 0.9 : 1.1} strokeLinejoin="round" />
+      <path d="M73.8 46 Q70.5 42 77.5 30 Q84.5 42 81.2 46 Q77.5 44.4 73.8 46Z" fill={found ? '#EBD2A8' : 'none'} stroke={found ? 'none' : OUT.vein} strokeWidth={0.8} opacity={found ? 1 : 0.6} />
+      <path d="M75.4 42l1.3 1.6M79.8 41.8l-1.2 1.7M77.4 38.2l.6 1.4" stroke={found ? '#B8905E' : OUT.vein} strokeWidth=".8" strokeLinecap="round" opacity={found ? 1 : 0.5} />
+      <rect x="8" y="64" width="80" height="18" rx="3" fill={found ? `url(#${uid}-w)` : OUT.fill} stroke={found ? 'none' : OUT.stroke} strokeWidth={1.1} />
+      <path d="M14 70h20M42 70h12M62 70h20M20 76h16M46 76h22" stroke={found ? '#CFE6EE' : OUT.vein} strokeWidth="1" strokeLinecap="round" opacity={found ? 0.7 : 0.45} />
     </>
   );
 }
@@ -452,8 +455,8 @@ function Tufa({ found, uid }: { found: boolean; uid: string }) {
           ))}
         </g>
       )}
-      <rect x="6" y="72" width="84" height="16" rx="3" fill={found ? `url(#${uid}-w)` : OUT.fill} stroke={found ? 'none' : OUT.stroke} strokeWidth={1.1} />
-      <path d="M14 78h20M44 78h10M62 78h18M22 83h14M50 83h20" stroke={found ? '#D8EEF2' : OUT.vein} strokeWidth="1" strokeLinecap="round" opacity={found ? 0.75 : 0.45} />
+      <rect x="20" y="72" width="56" height="16" rx="3" fill={found ? `url(#${uid}-w)` : OUT.fill} stroke={found ? 'none' : OUT.stroke} strokeWidth={1.1} />
+      <path d="M26 78h14M46 78h8M60 78h10M30 83h12M50 83h16" stroke={found ? '#D8EEF2' : OUT.vein} strokeWidth="1" strokeLinecap="round" opacity={found ? 0.75 : 0.45} />
     </>
   );
 }
@@ -483,25 +486,42 @@ function Eyes({ found, uid }: { found: boolean; uid: string }) {
   );
 }
 
-const TRACK_BLOB = blob(48, 50, 40, 36, 21, 10, 0.08);
-function Track({ found }: { found: boolean }) {
-  // Mule deer: two pointed teardrop halves making an upside-down heart.
-  const half = (x: number, y: number, s: number, flip: boolean) => {
-    const f = flip ? -1 : 1;
-    return `M${x} ${y - 13 * s}C${x + f * 7 * s} ${y - 9 * s} ${x + f * 9 * s} ${y + 4 * s} ${x + f * 7.5 * s} ${y + 11 * s}C${x + f * 6 * s} ${y + 15 * s} ${x + f * 1.2 * s} ${y + 14 * s} ${x + f * 0.8 * s} ${y + 9 * s}C${x + f * 0.4 * s} ${y + 1 * s} ${x - f * 0.4 * s} ${y - 7 * s} ${x} ${y - 13 * s}Z`;
-  };
-  const print = (x: number, y: number, s: number, a: number) => (
-    <g transform={`rotate(${a} ${x} ${y})`} fill={found ? '#6A472B' : 'none'} stroke={found ? 'none' : OUT.stroke} strokeWidth={1.1}>
-      <path d={half(x - 1.6 * s, y, s, true)} />
-      <path d={half(x + 1.6 * s, y, s, false)} />
-    </g>
-  );
+// Mule deer track: a cloven heart. Two mirrored teardrop halves, pointed
+// toes forward, rounded heels, splayed 8°, pressed into pale mud (a darker
+// floor, an ink rim, and a lit lip on the far side), with two dewclaws.
+const TRACK_MUD = 'M48 8 C70 8 86 26 86 50 C86 74 70 90 48 90 C26 90 10 74 10 50 C10 26 26 8 48 8 Z';
+const HALF = 'M1.6 -27 C10 -18 19 -6 18.5 8 C18 20 11 27 5 26 C1 25.5 0.8 20 1 12 C1.2 0 0.8 -15 1.6 -27 Z';
+const TRACK_HALVES = [
+  { d: HALF, t: 'translate(49.6 46) rotate(4 5 26)' },
+  { d: HALF, t: 'translate(46.4 46) scale(-1 1) rotate(4 5 26)' },
+];
+function Track({ found, uid }: { found: boolean; uid: string }) {
   return (
-    <>
-      <path d={TRACK_BLOB} fill={found ? '#D9C4A4' : OUT.fill} stroke={found ? '#A88D66' : OUT.stroke} strokeWidth={found ? 0.9 : 1.1} strokeDasharray={found ? undefined : '2 3'} />
-      {print(38, 62, 1.35, -12)}
-      {print(60, 32, 1.1, -12)}
-    </>
+    <g transform="rotate(-10 48 50)">
+      <defs>
+        <radialGradient id={`${uid}-mud`} cx=".42" cy=".38" r=".7">
+          <stop offset="0" stopColor="#EADCC4" />
+          <stop offset="1" stopColor="#CDB693" />
+        </radialGradient>
+        <linearGradient id={`${uid}-pr`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#4A3019" />
+          <stop offset="1" stopColor="#8A6644" />
+        </linearGradient>
+      </defs>
+      <path d={TRACK_MUD} fill={found ? `url(#${uid}-mud)` : OUT.fill} stroke={found ? '#B39A74' : OUT.stroke} strokeWidth={found ? 0.9 : 1.1} strokeDasharray={found ? undefined : '2 3'} />
+      {TRACK_HALVES.map((h, i) => (
+        <g key={i} transform={h.t}>
+          {/* the lit lip on the far edge of the depression */}
+          {found && <path d={h.d} fill="none" stroke="#F6EDDD" strokeWidth={2.2} transform="translate(0.9 1)" />}
+          <path d={h.d} fill={found ? `url(#${uid}-pr)` : 'none'} stroke={found ? '#2E1D0E' : OUT.stroke} strokeWidth={found ? 1.2 : 1.3} strokeLinejoin="round" />
+          {/* soft inner shadow under the near wall */}
+          {found && <path d="M3 -18 C9 -10 13 -2 13.5 8" fill="none" stroke="#2E1D0E" strokeWidth={2.4} strokeLinecap="round" opacity={0.28} />}
+        </g>
+      ))}
+      {[38.5, 57.5].map((x) => (
+        <ellipse key={x} cx={x} cy={80} rx={3} ry={2.2} fill={found ? '#5E4027' : 'none'} stroke={found ? '#2E1D0E' : OUT.stroke} strokeWidth={found ? 0.9 : 1.1} />
+      ))}
+    </g>
   );
 }
 
@@ -530,6 +550,64 @@ function Obsidian({ found, uid }: { found: boolean; uid: string }) {
     </>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Optical normalization: every specimen (except the deliberately oversized
+// "big" leaf) is scaled so its longest side is 70 of 96 units and centered on
+// its visual centroid, so a maple and a pinecone read the same size.
+
+function extent(paths: string[]) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const d of paths) {
+    const n = (d.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+    for (let i = 0; i + 1 < n.length; i += 2) {
+      x0 = Math.min(x0, n[i]);
+      x1 = Math.max(x1, n[i]);
+      y0 = Math.min(y0, n[i + 1]);
+      y1 = Math.max(y1, n[i + 1]);
+    }
+  }
+  return { x0, y0, x1, y1 };
+}
+/** Area centroid of a polygon path (M…L…Z with absolute points). */
+function centroid(d: string): P2 {
+  const n = (d.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+  let a = 0, cx = 0, cy = 0;
+  for (let i = 0; i + 3 < n.length + 2; i += 2) {
+    const [xa, ya, xb, yb] = [n[i], n[i + 1], n[(i + 2) % n.length], n[(i + 3) % n.length]];
+    if (xb === undefined) break;
+    const c = xa * yb - xb * ya;
+    a += c;
+    cx += (xa + xb) * c;
+    cy += (ya + yb) * c;
+  }
+  return a ? [cx / (3 * a), cy / (3 * a)] : [48, 48];
+}
+const OPTICAL = 70;
+function fitTo(paths: string[], center?: P2): string {
+  const b = extent(paths);
+  const k = OPTICAL / Math.max(b.x1 - b.x0, b.y1 - b.y0);
+  // Leaves: halfway between the blade's centroid and the box center, so the
+  // petiole doesn't pull the blade off-center.
+  const c: P2 = center ? [(center[0] + (b.x0 + b.x1) / 2) / 2, (center[1] + (b.y0 + b.y1) / 2) / 2] : [(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2];
+  return `translate(${f1(48 - c[0] * k)} ${f1(48 - c[1] * k)}) scale(${+k.toFixed(4)})`;
+}
+const leafFit = (sh: Shape) => fitTo([sh.outline, sh.petiole], centroid(sh.outline));
+const FIT: Record<string, string> = {
+  aspen: leafFit(SHAPES.aspen),
+  cottonwood: leafFit(SHAPES.cottonwood),
+  willow: leafFit(SHAPES.willow),
+  birch: leafFit(SHAPES.birch),
+  red: leafFit(SHAPES.red),
+  heart: leafFit(SHAPES.heart),
+  cone: fitTo([CONE_PATH, 'M48 16 Q49 10 46 6']),
+  granite: fitTo([GRANITE.d]),
+  dam: fitTo([DAM_MOUND, STUMP, 'M8 64 L88 82']),
+  tufa: fitTo([TUFA.d, 'M20 72 L76 88']),
+  eyes: fitTo(['M30 4 Q27 48 29 92 L67 92 Q69 48 66 4Z']),
+  track: fitTo([TRACK_MUD]),
+  obsidian: fitTo(['M16 64 L30 30 L52 18 L78 34 L84 60 L62 78 L32 80 Z']),
+};
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -578,7 +656,7 @@ export function Specimen({ id, found = false, className = '', label }: SpecimenP
       body = <Eyes found={found} uid={uid} />;
       break;
     case 'track':
-      body = <Track found={found} />;
+      body = <Track found={found} uid={uid} />;
       break;
     case 'obsidian':
       body = <Obsidian found={found} uid={uid} />;
@@ -586,14 +664,15 @@ export function Specimen({ id, found = false, className = '', label }: SpecimenP
   }
   return (
     <svg viewBox="0 0 96 96" width="100%" height="100%" className={`specimen ${found ? 'art' : ''} ${className}`} data-found={found || undefined} role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : true} overflow="visible">
-      {body}
+      {FIT[id] ? <g transform={FIT[id]}>{body}</g> : body}
     </svg>
   );
 }
 
 /**
- * The outline of a specimen as path data (96 × 96 units), for particles and
- * masks ("found" bursts use the exact silhouette).
+ * The outline of a specimen as path data (in its drawing units, before the
+ * optical fit), for particles ("found" bursts use the exact silhouette).
+ * Size the particle from the path's own box.
  */
 export function specimenSilhouette(id: SpecimenId | string): string {
   switch (id) {
@@ -610,13 +689,13 @@ export function specimenSilhouette(id: SpecimenId | string): string {
     case 'granite':
       return GRANITE.d;
     case 'dam':
-      return 'M10 68 Q48 30 86 68 Z';
+      return DAM_MOUND;
     case 'tufa':
       return TUFA.d;
     case 'eyes':
       return 'M30 4 Q27 48 29 92 L67 92 Q69 48 66 4Z';
     case 'track':
-      return TRACK_BLOB;
+      return TRACK_MUD;
     case 'obsidian':
       return 'M16 64 L30 30 L52 18 L78 34 L84 60 L62 78 L32 80 Z';
   }

@@ -1,6 +1,6 @@
 # Fall Trip UI rulebook
 
-This file is for screen builders. The design direction is in `docs/DESIGN-DIRECTION.md`, and it wins where the two disagree. Every primitive is shown in every state at **`#/_kit`**. Open it in light, dark and night before you build, and again before you ship.
+This file is for screen builders. The design direction is in `docs/DESIGN-DIRECTION.md`, and it wins where the two disagree. Every primitive is shown in every state at **`#/_kit`**. Open it in light, dark and night before you build, and again before you ship. (The kit loads in dev and online, but is not precached or preloaded in production.)
 
 - [File ownership](#file-ownership)
 - [Page template](#page-template)
@@ -36,13 +36,13 @@ Screen map:
 | Area | Files |
 |---|---|
 | today | `Today.tsx` (`/`) |
-| plan | `PlanDay.tsx` (`/plan`, `/plan/:day`), `RouteOption.tsx` (`/route/:id`), `Packing.tsx` (`/pack`), `BeforeYouGo.tsx` (`/before`) |
-| activities | `Explore.tsx` (`/explore`, `/explore/:filter`), `Activity.tsx` (`/do/:id`), `ColorReport.tsx` (`/color`), `Food.tsx` (`/food`) |
+| plan | `PlanDay.tsx` (`/plan/:day?`), `RouteOption.tsx` (`/route/:id`), `Packing.tsx` (`/pack`), `BeforeYouGo.tsx` (`/before`) |
+| activities | `Explore.tsx` (`/explore/:filter?`), `Activity.tsx` (`/do/:id`), `ColorReport.tsx` (`/color`), `Food.tsx` (`/food`) |
 | kids | `KidsHome`, `Hunt`, `Leaves`, `Tracks`, `Rocks`, `Sky`, `Games`, `Draw`, `Photos`, `Cozy` (`/kids/*`) |
 | faith | `FaithHome` (`/faith`), `Devotion` (`/faith/:id`), `VerseGame` (`/faith/verse`), `Journal`, `Lookback` |
 | more | `Settings`, `About`, `Install` |
 
-`/plan` + `/plan/:day` are one page, and so are `/explore` + `/explore/:filter`. Switching the day or filter re-renders in place with no page transition. Use `navigate('/plan/sat', { replace: true })` for those.
+`/plan` and `/plan/sat` are one route (`/plan/:day?`), and so are `/explore` and `/explore/<filter>` (`/explore/:filter?`). Switching the day or filter re-renders the same screen in place: local state, open Folds, scroll and the Segmented thumb's glide all survive. Use `navigate('/plan/sat', { replace: true })` for those.
 
 ---
 
@@ -74,10 +74,13 @@ export default function Hunt(_: ScreenProps) {
   - `compact`: no large title.
   - `barCenter`: puts a node in the bar center, for example a `Segmented` day picker.
   - `eyebrow`: a small line above the title.
-  - `dock`: a bar docked above the tab bar, like the devotion stepper. Page adds the bottom space for it.
+  - `dock`: a bar docked above the tab bar, like the devotion stepper. Page adds the bottom space for it, keeps it above the tab scrim, and lifts toasts above it. Wrap its content in `<div className="dock-surface">` (the strong material: opaque, float shadow, no blur).
   - `leading`: replaces the back button (Today's wordmark).
 - `Page` owns:
   - the scroll container, safe areas and bottom padding (the content clears the tab bar and its scrim);
+  - the tab bar's scrim (it lives in each page's frame, so it moves with the page and sits under the dock);
+  - `scroll-padding`, so keyboard focus never lands under the nav bar, tab bar or dock;
+  - the large-title collapse, measured from your eyebrow/title/subtitle (glass arrives as the first header line reaches the bar; the compact title only once the large one is fully under it);
   - scroll restoration on back and tab switches;
   - tap-the-active-tab to scroll to top;
   - `document.title`.
@@ -106,8 +109,10 @@ Colors are CSS variables on `<html data-theme="light|dark|night">`. Tailwind uti
 | `--water`, `--water-text` | lakes | |
 
 - Links, secondary buttons, the tab lens, segmented thumbs, switches and filter chips are **neutral ink**, never amber.
-- Glow (`--glow`, `--glow-mark`) exists only in dark mode. It is used on the countdown, live indicators and the route. Light mode has no glow, and neither does night. Turn glows off after that day's "Dark" time.
-- **Night vision** (`data-theme="night"`, `setNightVision(true)` from `@/lib/theme`) uses one red hue at three steps on near-black, with no cool colors and no glow. Offer it with one tap on the trip evenings after "Dark", on Today and on Night sky. Art gets the `.art` class and is red-shifted automatically.
+- Glow (`--glow`, `--glow-mark`) exists only in dark mode. It is used on the countdown, live indicators and the route. Light mode has no glow, and neither does night.
+- **After dark.** On trip nights after that day's "Dark" time (and before sunrise), the shell sets `html[data-after-dark]`: the glow tokens, the live bloom and the map glows go out by themselves. Don't build your own threshold: use `useAfterDark()` / `isAfterDark(d)` / `sunTimes(day)` from `@/lib/time`.
+- **Night vision** (`data-theme="night"`, `setNightVision(true)` from `@/lib/theme`) uses one red hue on near-black, with no cool colors and no glow. Offer it with `<NightVisionOffer />` on Today and on Night sky (it appears by itself after Dark, and becomes "Turn off night vision" in night). Art gets the `.art` class and is red-shifted automatically (a GPU filter chain). The three night inks are close in luminance on purpose (red only); carry hierarchy with weight and size, not with `text-2`/`text-3` alone.
+- **Checkboxes are ink**, like switches. Pass `color` (amber, a kid color) only for "found" states such as the hunt.
 - To check contrast after any token change, run `npm run contrast`. Every text pair is AA and every mark is ≥3:1 in all three themes.
 
 ---
@@ -137,6 +142,8 @@ Newsreader (serif, variable opsz) is for display and reading. Inter (`cv05`, tab
 | `t-period` | the small "am/pm" after a time: `9:30<span className="t-period">am</span>` |
 
 Practical numbers are always tabular Inter (`num`). Only the countdown number may be serif.
+
+**Dynamic Type.** Primitives have a `min-height` floor and em padding, never a fixed `height`, so they grow with the text (checked at a 23 px and a 33 px root). Do the same: no fixed heights on anything holding text, and let header rows `flex-wrap` (e.g. `flex flex-wrap items-center gap-x-2 gap-y-1.5` for "NOW · Since 9:15 · Leave by"). Bar chrome (nav title, back pill, tab labels) is capped, like iOS.
 
 ---
 
@@ -217,7 +224,8 @@ Everything below is exported from `@/ui`. Icons come from `@/ui/icons` (Phosphor
   options={[{ value: 'fri', label: 'Fri 9' }, { value: 'sat', label: 'Sat 10' }, { value: 'sun', label: 'Sun 11' }]} />
 <Segmented size="sm" label="Translation" … />
 <Switch checked={on} onChange={setOn} label="Sounds" />
-<Checkbox checked={c} onChange={setC} label="Packed" color="var(--kid-2)" />
+<Checkbox checked={c} onChange={setC} label="Packed" />                     // ink disc, card-colored tick
+<Checkbox checked={c} onChange={setC} label="Found" color="var(--kid-2)" tickColor="var(--kid-2-ink)" />   // found states only
 <CheckRow checked={has(id)} onChange={() => toggle(id)} title="Headlamps" subtitle="One per person" detail="×5" />
 <TextField label="Kid 1's name" value={v} onChange={setV} placeholder="Kid 1" hint="Stays on this device." />
 ```
@@ -226,7 +234,7 @@ For a checklist whose done items sink after 600 ms of stillness:
 
 ```tsx
 const { has, toggle } = useChecklist('pack');                 // src/lib/store.ts
-const order = useSettledOrder(items, (i) => has(i.id));
+const order = useSettledOrder(items, (i) => i.id, (i) => has(i.id));  // tracked by id: fresh objects each render are fine
 <ListGroup>{order.map((i) => <CheckRow key={i.id} … />)}</ListGroup>   // rows animate to their new place
 ```
 
@@ -252,8 +260,11 @@ const order = useSettledOrder(items, (i) => has(i.id));
 const kids = useKids();          // src/lib/family.ts. Names come from Settings; never hard-code names.
 <KidAvatar index={1} />          // kid color + AA numeral (night: outlined)
 <KidChip index={1} name={kids[1]} detail="reads" active />                    // devotion turns
-<KidChip index={0} name={kids[0]} detail="6 found" size="lg" active onClick={…} />   // hunt switcher
+<KidPicker label="Whose hunt" value={kid} onChange={setKid} names={kids}
+  details={['6 found', '4 found', '0 found']} progress={[6/11, 4/11, 0]} />      // hunt switcher: radiogroup, arrow keys, progress rings
 ```
+
+`KidChip` with `onClick` is a toggle (`aria-pressed`) with a 44 pt hit area; for choosing one kid use `KidPicker`.
 
 ### Overlays
 
@@ -261,7 +272,9 @@ const kids = useKids();          // src/lib/family.ts. Names come from Settings;
 <Sheet open={open} onOpenChange={setOpen} title="Quaking aspen leaf"
   footer={<Button variant="primary" size="lg" block>Found it</Button>}>…</Sheet>   // Vaul; the page behind scales
 toast({ title: 'Saved', body: 'On this device.', icon: Check })                    // one at a time, aria-live
-toast({ title: 'Update ready', action: { label: 'Reload', onClick } })             // stays until acted on
+toast({ title: 'Update ready', action: { label: 'Reload', onClick } })             // stays until acted on or dismissed (X, or swipe down)
+announce('6 of 11 found')                                                           // screen readers only; see Accessibility
+<NightVisionOffer />                                                                // after Dark only (force to always show)
 <Fold summary="2 earlier" detail="7:00 and 8:15" lead={<Checkbox checked decorative size={22} />}>…</Fold>
 <EmptyState icon={Backpack} title="Nothing packed yet" action={<Button size="sm">Start</Button>}>…</EmptyState>
 ```
@@ -270,12 +283,14 @@ toast({ title: 'Update ready', action: { label: 'Reload', onClick } })          
 
 The shell already renders these:
 
-- the tab bar and its scrim;
-- page transitions;
-- the edge-swipe back gesture (installed app only);
-- focus moving to `<main>` after navigation;
-- the "Update ready" toast;
+- the tab bar (each Page renders its own scrim);
+- page transitions: push/pop slide with parallax and dim; a tab switch fades the new page in on top of the old one, which holds still (no double exposure). The previous page stays mounted underneath (parked, inert), so back and the edge swipe never wait for a remount, and it keeps its scroll and state;
+- the edge-swipe back gesture (installed app only, never on a tab's root page): both pages track your finger;
+- focus moving to the new page's `<h1>` once a push, pop or tab switch has settled (not on a replace such as the Plan day switch);
+- `html[data-after-dark]`, the screen-reader announcer, and the "Update ready" toast;
 - the pre-paint theme script.
+
+Sheets load lazily (Vaul ships with the sheet chunk, preloaded when idle); `Sheet` moves keyboard focus into itself and parks the scaled-back page on black.
 
 To navigate from code:
 
@@ -307,10 +322,20 @@ import { Terrain, RouteLine, StopDot, MapLabel, WaterLabel, FRIDAY_DRIVE, stop, 
   - `stop(region, key)` gives a stop's position, `project(region, lat, lon)` converts coordinates, and `REGIONS[region].stopElevation` gives elevations.
   - `eastToRoute(pt)` and `EAST_TO_ROUTE_TRANSFORM` draw eastside detail on the overview: `<g transform={EAST_TO_ROUTE_TRANSFORM}><Relief region="eastside" /></g>`.
   - `cropAround(region, center, width, aspect)` makes a crop, for example the Now card's map strip.
-- **Relief** is a pre-rendered WebP per region and theme (`npm run relief`), with calm light, feathered labels and Mono Lake drawn as water. Draw only live overlays on top. Don't re-rasterize contours.
+- **Relief** is pre-rendered WebP tiles per region and theme (`npm run relief`; light and dark at high resolution, night at low), with calm light and Mono Lake drawn as water. `reliefTiles(region, theme)` lists them. Draw only live overlays on top. Don't re-rasterize contours.
 - The contour JSON is in `art/topo/`. It is not shipped.
+- **Layers.** The relief sits in its own layer, which alone carries `fade`; the route fades with it, but stops and labels always stay at full strength. Extra relief (e.g. eastside detail) goes in `underlay`: `underlay={<g transform={EAST_TO_ROUTE_TRANSFORM}><Relief region="eastside" /></g>}`.
 - **Sizes** inside overlays are CSS px. `useTerrain().k` gives px per map unit.
-  - For an animated camera, pass `crop` as a `MotionValue<string>` viewBox and your own `scale`.
+- **Camera** (the route story): a compositor transform over the base `crop`, never a viewBox animation.
+
+  ```tsx
+  const base: Crop = [0, 52, 420, 377];
+  const cam = useCamera(cameraFor(base, base));       // or { x, y, zoom } motion values derived from scroll
+  cam.to(cameraFor(base, cropAround('route', tioga, 200, 420 / 377)));   // spring.camera
+  <Terrain region="route" crop={base} camera={cam}>…</Terrain>
+  ```
+  Strokes, dots and labels keep their screen size while it moves and snap exact when it settles. Author chapter framings as crops and convert with `cameraFor`. Keep zooms to about 3x or less: the relief is 5 px/unit (route) and 6 px/unit (eastside).
+- The route's dark glow is two faint wide strokes (no filters), so drawing it with `progress` stays cheap.
 - **Labels:**
   - Choose `side` so no label sits on the route line.
   - Use `offset` plus `leader` when stops crowd.
@@ -325,7 +350,7 @@ specimenSilhouette('aspen')                                                // pa
 ```
 
 - Every hunt id in `src/content/kids.js` has art.
-- Specimens size to their container.
+- Specimens size to their container and share one optical size (longest side 70 of 96, centered on the drawing's visual center), except `big`, which is drawn oversized on purpose. Leaves lean −12°.
 - Hunt tiles must be `<button data-hunt-item={id} aria-pressed={found}>`, because the offline test clicks `[data-hunt-item="aspen"]`.
 
 ---
@@ -378,11 +403,11 @@ Import from `@/ui` (`spring`, `fadeUp`, `stagger`, `usePress`, `useCalm`, `useFi
 - [ ] One `<h1>` (via `Page`), then `h2` sections in order. The shell provides `<main>`.
 - [ ] Every control has a name. `IconButton` needs `label`, `Segmented` needs `label`, and `Switch` needs `label`.
 - [ ] Toggles expose `aria-pressed` or `aria-checked`. Hunt tiles use `aria-pressed`.
-- [ ] Targets are ≥ 44 × 44 pt, with visible focus rings (don't remove outlines).
+- [ ] Targets are ≥ 44 × 44 pt, with visible focus rings (don't remove outlines). Focus rings are neutral ink (`--focus`) in every theme.
 - [ ] Contrast: use tokens only; `npm run contrast` passes.
 - [ ] Progress uses `role="progressbar"` with a spoken `valueText`, and the countdown uses `role="timer"` with a spoken label.
 - [ ] Art is `aria-hidden` unless it carries information; if it does, pass `label`.
-- [ ] Changes that matter are announced: use `toast()`, or an `aria-live="polite"` region ("6 of 11 found").
+- [ ] Changes that matter are announced. Use `announce('6 of 11 found')` from `@/ui` (one shared, visually hidden live region; `announce(text, 'assertive')` only for something that must interrupt). `toast()` is for things everyone should see; don't use it just to reach screen readers, and don't add your own `aria-live` regions.
 - [ ] Reduced motion: no movement-only feedback.
 - [ ] Text scales with Dynamic Type. Use rem type classes and don't fix heights on text containers.
 - [ ] Check in light, dark and night, on iPhone and iPad.

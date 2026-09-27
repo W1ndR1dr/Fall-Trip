@@ -46,8 +46,8 @@ export function Segmented<T extends string>({ options, value, onChange, label, s
   };
 
   return (
-    <div role="radiogroup" aria-label={label} className={`seg seg-${size} ${className}`} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }} onKeyDown={onKey}>
-      <motion.span className="seg-thumb" aria-hidden="true" style={{ width: `calc((100% - 6px) / ${options.length})`, x }} />
+    <div role="radiogroup" aria-label={label} className={`seg seg-${size} ${className}`} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))`, ['--seg-n' as string]: options.length }} onKeyDown={onKey}>
+      <motion.span className="seg-thumb" aria-hidden="true" style={{ x }} />
       {options.map((o, i) => (
         <SegButton key={o.value} i={i} pos={pos} selected={i === index} onSelect={() => onChange(o.value)} label={o.aria} buttonRef={(el) => (refs.current[i] = el)}>
           {o.label}
@@ -119,19 +119,22 @@ export type CheckboxProps = {
   onChange?: (checked: boolean) => void;
   label?: string;
   size?: number;
-  /** Kid color for per-kid lists; defaults to amber. */
+  /** Fill color. Defaults to ink: ordinary checklists are neutral. Pass
+   *  amber or a kid color only for "found" states (the hunt). */
   color?: string;
+  /** Tick color on a custom fill (default --on-accent; for kid colors pass var(--kid-N-ink)). */
+  tickColor?: string;
   /** Render as a presentational mark (when the whole row is the button). */
   decorative?: boolean;
 };
 
 const CHECK = 'M7.2 12.4l3.1 3.1 6.5-6.9';
 
-/** Round check. Fill pops (alive spring), the tick draws, the row text dims. */
-export function Checkbox({ checked, onChange, label, size = 24, color, decorative }: CheckboxProps) {
+/** Round check: an ink disc with a card-colored tick (or `color`). Fill pops (alive spring), the tick draws, the row text dims. */
+export function Checkbox({ checked, onChange, label, size = 24, color, tickColor, decorative }: CheckboxProps) {
   const calm = useCalm();
   const mark = (
-    <span className="check" data-on={checked || undefined} style={{ width: size, height: size, ...(color ? { ['--check-fill' as string]: color } : null) }} aria-hidden={decorative || undefined}>
+    <span className="check" data-on={checked || undefined} style={{ width: size, height: size, ...(color ? { ['--check-fill' as string]: color, ['--check-tick' as string]: tickColor ?? 'var(--on-accent)' } : null) }} aria-hidden={decorative || undefined}>
       <motion.span className="check-fill" initial={false} animate={{ scale: checked ? 1 : 0.6, opacity: checked ? 1 : 0 }} transition={calm ? { duration: 0 } : spring.pop} />
       <svg viewBox="0 0 24 24" className="check-tick">
         <motion.path
@@ -164,18 +167,19 @@ export type CheckRowProps = {
   /** Trailing detail (quantity, "Kid 2"). */
   detail?: ReactNode;
   color?: string;
+  tickColor?: string;
   className?: string;
 };
 
 /** A checklist row: the whole row toggles. Pair with useSettledOrder to sink done items. */
-export function CheckRow({ checked, onChange, title, subtitle, detail, color, className = '' }: CheckRowProps) {
+export function CheckRow({ checked, onChange, title, subtitle, detail, color, tickColor, className = '' }: CheckRowProps) {
   return (
     <motion.li layout="position" transition={spring.glide} className="row-li">
       <button
         type="button"
         role="checkbox"
         aria-checked={checked}
-        className={`row row-tappable check-row ${className}`}
+        className={`row row-tappable row-has-lead check-row ${className}`}
         data-done={checked || undefined}
         onClick={() => {
           haptic(10);
@@ -183,7 +187,7 @@ export function CheckRow({ checked, onChange, title, subtitle, detail, color, cl
         }}
       >
         <span className="row-lead">
-          <Checkbox checked={checked} decorative color={color} />
+          <Checkbox checked={checked} decorative color={color} tickColor={tickColor} />
         </span>
         <span className="row-text">
           <span className="row-title">{title}</span>
@@ -199,19 +203,29 @@ export function CheckRow({ checked, onChange, title, subtitle, detail, color, cl
  * Order for a checklist where done items sink to the bottom, but only after
  * the list has been still for `delay` ms (600 by default), so a row never
  * jumps out from under the finger that just checked it.
+ *
+ * Items are tracked by `getId`, so mapping to fresh objects every render is
+ * fine: the order is a list of ids, mapped back to the current items.
+ *   const order = useSettledOrder(items, (i) => i.id, (i) => has(i.id));
  */
-export function useSettledOrder<T>(items: T[], isDone: (item: T) => boolean, delay = 600): T[] {
-  const sort = () => [...items.filter((i) => !isDone(i)), ...items.filter(isDone)];
-  const [order, setOrder] = useState<T[]>(sort);
-  const key = items.map((i) => (isDone(i) ? '1' : '0')).join('') + items.length;
+export function useSettledOrder<T>(items: readonly T[], getId: (item: T) => string, isDone: (item: T) => boolean, delay = 600): T[] {
+  const sortIds = () => [...items.filter((i) => !isDone(i)), ...items.filter(isDone)].map(getId);
+  const [order, setOrder] = useState<string[]>(sortIds);
+  const ids = items.map(getId);
+  const doneKey = items.map((i) => (isDone(i) ? '1' : '0')).join('');
+  const idKey = ids.join('\u0000');
   useEffect(() => {
-    // New or removed items show immediately; completion reflows after a pause.
-    setOrder((prev) => (prev.length !== items.length || prev.some((p) => !items.includes(p)) ? sort() : prev.map((p) => items[items.indexOf(p)])));
-    const t = window.setTimeout(() => setOrder(sort()), delay);
+    // New or removed items show at once; completion reflows after a pause.
+    setOrder((prev) => (prev.length !== ids.length || prev.some((id) => !ids.includes(id)) ? sortIds() : prev));
+    const t = window.setTimeout(() => setOrder(sortIds()), delay);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-  return order;
+  }, [doneKey, idKey]);
+  const byId = new Map(items.map((i) => [getId(i), i] as const));
+  const out = order.map((id) => byId.get(id)).filter((i): i is T => i !== undefined);
+  // Items added since the last settle (before the effect runs) go at the end.
+  if (out.length !== items.length) for (const i of items) if (!out.includes(i)) out.push(i);
+  return out;
 }
 
 // ---------------------------------------------------------------------------

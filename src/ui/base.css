@@ -98,6 +98,9 @@
       font: -apple-system-body;
       font-family: var(--font-sans);
       line-height: 1.47;
+      /* The font shorthand resets these (CSS Fonts 4): set them again. */
+      font-feature-settings: 'cv05' 1;
+      font-optical-sizing: auto;
     }
   }
   body {
@@ -108,6 +111,8 @@
     background: var(--bg);
     font-size: calc(15rem / 17);
     letter-spacing: -0.006em;
+    /* Also on body, so no root shorthand can drop Inter's tailed l. */
+    font-feature-settings: 'cv05' 1;
   }
   #root {
     position: fixed;

@@ -147,7 +147,12 @@ export function usePress({ delay = 60, disabled = false }: { delay?: number; dis
       onPointerMove,
       onPointerUp: () => end(true),
       onPointerCancel: () => end(false),
-      onPointerLeave: () => end(false),
+      // Touch fires pointerleave right after pointerup, which would cancel the
+      // quick-tap acknowledgement; only a mouse leaving mid-press cancels.
+      // (Touch cancels arrive as pointercancel or the 8 px move check.)
+      onPointerLeave: (e: ReactPointerEvent) => {
+        if (e.pointerType === 'mouse' && start.current) end(false);
+      },
     },
     transition: pressed ? { type: 'spring' as const, stiffness: 800, damping: 40 } : { type: 'spring' as const, stiffness: 500, damping: 30 },
   };

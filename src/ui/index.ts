@@ -7,8 +7,10 @@ export { Section, SectionHeader, Card, LiveCard, IconWell, Eyebrow, Divider, typ
 export { ListGroup, ListRow, NavRow, type ListRowProps } from './List';
 export { Segmented, Switch, Checkbox, CheckRow, TextField, useSettledOrder, type SegmentOption } from './Controls';
 export { Tag, Chip, LivePill, LeaveBy, OfflineChip, useOnline, ProgressBar, ProgressRing, Pips, NumberRoller, type TagTone } from './Indicators';
-export { KidAvatar, KidChip, KID_COLOR, KID_TEXT } from './Kid';
-export { Sheet, Toaster, toast, dismissToast, Fold, EmptyState, type SheetProps, type ToastInput } from './Overlay';
+export { KidAvatar, KidChip, KidPicker, KID_COLOR, KID_TEXT, type KidChipProps, type KidPickerProps } from './Kid';
+export { Sheet, preloadSheet, Toaster, toast, dismissToast, Fold, EmptyState, type SheetProps, type ToastInput } from './Overlay';
+export { announce, Announcer } from './Announce';
+export { NightVisionOffer, type NightVisionOfferProps } from './NightVision';
 export { spring, fade, fadeUp, stagger, usePress, useCalm, useSpringFor, useFirstVisit, pressScale, type SpringName } from './motion';
 export { useFrame, usePageScroll } from '@/app/frame';
 export { navigate, goBack, canGoBack } from '@/app/nav';

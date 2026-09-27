@@ -6,10 +6,12 @@
 //   pop   back (slides out to the right)
 //   fade  switching tabs (cross-fade, like iOS)
 //   none  replace (e.g. switching the Plan day), no page transition
+//   swipe the edge-swipe already moved the pages; the stack just settles
 import { navigate as hashNavigate, useHashLocation } from 'wouter/use-hash-location';
 import type { BaseLocationHook } from 'wouter';
 
-export type NavMode = 'push' | 'pop' | 'fade' | 'none';
+export type NavMode = 'push' | 'pop' | 'fade' | 'none' | 'swipe';
+export type NavDir = 'push' | 'pop' | 'none';
 export type TabId = 'today' | 'plan' | 'activities' | 'kids' | 'faith' | 'none';
 
 const currentPath = () => '/' + location.hash.replace(/^#?\/?/, '').split('?')[0];
@@ -24,6 +26,11 @@ export function tabOf(path: string): TabId {
   if (seg === 'faith') return 'faith';
   if (['settings', 'about', 'install'].includes(seg)) return 'today';
   return 'none';
+}
+
+/** A tab's root page (no edge-swipe back from these; the tab bar is the way out). */
+export function isTabRoot(path: string): boolean {
+  return path === '/' || /^\/(plan|explore)(\/[^/]+)?$/.test(path) || path === '/kids' || path === '/faith';
 }
 
 function stamp(idx: number) {
@@ -42,7 +49,8 @@ if (typeof window !== 'undefined') {
 }
 
 let pendingMode: NavMode | null = null;
-let last = { from: typeof window !== 'undefined' ? currentPath() : '/', to: typeof window !== 'undefined' ? currentPath() : '/', mode: 'none' as NavMode };
+let seq = 0;
+let last = { from: typeof window !== 'undefined' ? currentPath() : '/', to: typeof window !== 'undefined' ? currentPath() : '/', mode: 'none' as NavMode, dir: 'none' as NavDir, idx, seq };
 
 if (typeof window !== 'undefined') {
   // Registered at import, before wouter subscribes, so the transition is
@@ -56,12 +64,12 @@ if (typeof window !== 'undefined') {
       n = idx + 1;
       stamp(n);
     }
-    const dir: NavMode = n < idx ? 'pop' : n > idx ? 'push' : 'none';
+    const dir: NavDir = n < idx ? 'pop' : n > idx ? 'push' : 'none';
     idx = n;
     const crossTab = tabOf(to) !== tabOf(last.to);
     const mode = pendingMode ?? (crossTab && dir !== 'none' ? 'fade' : dir);
     pendingMode = null;
-    last = { from: last.to, to, mode };
+    last = { from: last.to, to, mode, dir, idx: n, seq: ++seq };
   });
 }
 
@@ -99,9 +107,11 @@ export const canGoBack = () => idx > 0;
  * Back: pops history when there is somewhere in-app to go, otherwise
  * replaces with `fallback` (a deep link opened cold still has a way up).
  */
-export function goBack(fallback: string) {
-  if (idx > 0) history.back();
-  else navigate(fallback, { replace: true, mode: 'pop' });
+export function goBack(fallback: string, opts: { mode?: NavMode } = {}) {
+  if (idx > 0) {
+    if (opts.mode) pendingMode = opts.mode;
+    history.back();
+  } else navigate(fallback, { replace: true, mode: opts.mode ?? 'pop' });
 }
 
 // Per-path scroll memory (tab switches and back restore where you were).

@@ -1,11 +1,12 @@
 // Floating glass tab bar with a neutral lens (layoutId) and labels always on.
-// A scrim under it keeps content from being readable through the labels.
+// Each page renders its own scrim under the bar (see Page), so the scrim
+// moves with its page and sits under a page's dock, never over it.
 // Tapping the active tab goes to that tab's root, or scrolls it to the top.
 import { motion } from 'motion/react';
 import { useLocation } from 'wouter';
 import { BookOpenText, CalendarDots, Compass, Leaf, SunHorizon, type Icon } from '@/ui/icons';
 import { spring, useCalm } from '@/ui/motion';
-import { navigate, tabOf, type TabId } from './nav';
+import { isTabRoot, navigate, tabOf, type TabId } from './nav';
 
 const TABS: { id: TabId; href: string; label: string; icon: Icon }[] = [
   { id: 'today', href: '/', label: 'Today', icon: SunHorizon },
@@ -21,11 +22,10 @@ export function TabBar() {
   const calm = useCalm();
   return (
     <>
-      <div className="tab-scrim" aria-hidden="true" />
       <nav className="tabbar" aria-label="Sections">
         {TABS.map((t) => {
           const on = t.id === active;
-          const atRoot = location === t.href || (t.id === 'plan' && /^\/plan(\/\w+)?$/.test(location)) || (t.id === 'activities' && location.startsWith('/explore'));
+          const atRoot = on && isTabRoot(location);
           return (
             <a
               key={t.id}

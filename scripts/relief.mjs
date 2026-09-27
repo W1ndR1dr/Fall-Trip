@@ -16,7 +16,7 @@
 //   dark   evening sun from the west (bottom); dimmer slivers, fills at ~60%
 //   night  red-shifted and dim, for night vision
 // Mono Lake is drawn as water: inside the 1,900 m surface, outside 1,960 m.
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
@@ -28,6 +28,43 @@ const east = load('eastside');
 // Data module
 
 const f2 = (n) => Math.round(n * 100) / 100;
+
+// Raster resolution (px per map unit) and tile grid [cols, rows].
+const SCALE = { route: { light: 5, dark: 5, night: 2.5 }, eastside: { light: 6, dark: 6, night: 4 } };
+const GRID = { route: { light: [1, 3], dark: [1, 3], night: [1, 1] }, eastside: { light: [2, 2], dark: [2, 2], night: [1, 1] } };
+const OVERLAP = 2; // px on each inner edge, so tile seams never show
+const SIZE = { route: [route.width, route.height], eastside: [east.width, east.height] };
+/** Pixel rects (and unit rects) of each tile. */
+function tileRects(name, theme) {
+  const k = SCALE[name][theme];
+  const [uw, uh] = SIZE[name];
+  const W = Math.round(uw * k), H = Math.round(uh * k);
+  const [cols, rows] = GRID[name][theme];
+  const out = [];
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++) {
+      const x0 = Math.max(0, Math.round((c * W) / cols) - (c ? OVERLAP : 0));
+      const x1 = Math.min(W, Math.round(((c + 1) * W) / cols) + (c < cols - 1 ? OVERLAP : 0));
+      const y0 = Math.max(0, Math.round((r * H) / rows) - (r ? OVERLAP : 0));
+      const y1 = Math.min(H, Math.round(((r + 1) * H) / rows) + (r < rows - 1 ? OVERLAP : 0));
+      out.push({ px: [x0, y0, x1 - x0, y1 - y0], i: out.length, W, H, k });
+    }
+  return out;
+}
+const r3 = (n) => Math.round(n * 1000) / 1000;
+function tilesFor() {
+  const o = {};
+  for (const name of ['route', 'eastside']) {
+    o[name] = {};
+    for (const theme of ['light', 'dark', 'night']) {
+      o[name][theme] = tileRects(name, theme).map((t) => {
+        const [x, y, w, h] = t.px;
+        return { f: `relief-${name}-${theme}-${t.i}.webp`, x: r3(x / t.k), y: r3(y / t.k), w: r3(w / t.k), h: r3(h / t.k) };
+      });
+    }
+  }
+  return o;
+}
 function regionData(T) {
   return {
     width: T.width,
@@ -55,8 +92,11 @@ export const REGIONS = ${JSON.stringify({ route: regionData(route), eastside: re
 /** SVG matrix(a b c d e f) mapping eastside units into route units. */
 export const EAST_TO_ROUTE = ${JSON.stringify(E2R)} as const;
 
-/** Relief raster resolution (pixels per map unit) per region. */
-export const RELIEF_SCALE = { route: 2.5, eastside: 4 } as const;
+/** Relief raster resolution (pixels per map unit) per region and theme. */
+export const RELIEF_SCALE = ${JSON.stringify(SCALE)} as const;
+
+/** Relief tiles per region and theme, in map units (they overlap by 2 px). */
+export const RELIEF_TILES = ${JSON.stringify(tilesFor(), null, 0)} as const;
 `;
 writeFileSync(join(root, 'src/art/terrain-data.ts'), dataTs);
 console.log('wrote src/art/terrain-data.ts');
@@ -118,6 +158,9 @@ const slim = (d) => d.replace(/(\d+)\.(\d)/g, (m, a, b) => (b === '0' ? a : `${a
 function reliefSVG(T, theme, scale, name) {
   const P = PAL[theme];
   const W = Math.round(T.width * scale), H = Math.round(T.height * scale);
+  // Hairline widths are tuned in map units at the original resolution, so
+  // they read the same whatever the raster scale.
+  const ref = name === 'route' ? 2.5 : 4;
   const levels = T.layers.map((l) => l.level);
   const lo = Math.min(...levels.filter((l) => l > 0)), hi = Math.max(...levels);
   const sy = P.sun * P.shift;
@@ -159,12 +202,12 @@ function reliefSVG(T, theme, scale, name) {
       defs.push(`<mask id="lakeR" maskUnits="userSpaceOnUse" x="0" y="0" width="${T.width}" height="${T.height}"><g transform="matrix(${E2R.join(' ')})"><path d="${slim(e19)}" fill="#fff"/><path d="${slim(e196)}" fill="#000"/></g></mask>`);
       body.push(`<g clip-path="url(#monoR)"><rect x="0" y="0" width="${T.width}" height="${T.height}" fill="${P.water}" mask="url(#lakeR)"/></g>`);
     }
-    if (isIndex(l.level)) index.push(`<use href="#${id}" fill="none" stroke="${P.index}" stroke-width="${(P.indexW / scale).toFixed(3)}"/>`);
+    if (isIndex(l.level)) index.push(`<use href="#${id}" fill="none" stroke="${P.index}" stroke-width="${(P.indexW / ref).toFixed(3)}"/>`);
   });
   // Lake shore line on the eastside map (the 1,960 m contour, inside the basin).
   if (name === 'eastside') {
     const i196 = T.layers.findIndex((x) => x.level === 1960);
-    index.push(`<g clip-path="url(#mono)"><use href="#L${i196}" fill="none" stroke="${P.shore}" stroke-width="${(1.1 / scale).toFixed(3)}"/></g>`);
+    index.push(`<g clip-path="url(#mono)"><use href="#L${i196}" fill="none" stroke="${P.shore}" stroke-width="${(1.1 / ref).toFixed(3)}"/></g>`);
   }
 
   const base = name === 'route' ? P.water : ramp(P.ramp, 0);
@@ -194,14 +237,16 @@ const page = await browser.newPage();
 await page.setContent('<!doctype html><html><body></body></html>');
 const outDir = join(root, 'public/img/topo');
 mkdirSync(outDir, { recursive: true });
-const SCALE = { route: 2.5, eastside: 4 };
-const Q = { light: 0.8, dark: 0.82, night: 0.8 };
+for (const f of readdirSync(outDir)) if (/^relief-.*\.webp$/.test(f)) unlinkSync(join(outDir, f));
+const Q = { light: 0.78, dark: 0.8, night: 0.8 };
 
 for (const [name, T] of [['route', route], ['eastside', east]]) {
   for (const theme of ['light', 'dark', 'night']) {
-    const { svg, W, H } = reliefSVG(T, theme, SCALE[name], name);
-    const b64 = await page.evaluate(
-      async ({ svg, W, H, q }) => {
+    const k = SCALE[name][theme];
+    const { svg, W, H } = reliefSVG(T, theme, k, name);
+    const tiles = tileRects(name, theme).map((t) => t.px);
+    const out = await page.evaluate(
+      async ({ svg, W, H, q, tiles }) => {
         const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
         const img = new Image();
         img.src = url;
@@ -211,14 +256,21 @@ for (const [name, T] of [['route', route], ['eastside', east]]) {
         c.height = H;
         c.getContext('2d').drawImage(img, 0, 0, W, H);
         URL.revokeObjectURL(url);
-        return c.toDataURL('image/webp', q).split(',')[1];
+        return tiles.map(([x, y, w, h]) => {
+          const t = document.createElement('canvas');
+          t.width = w;
+          t.height = h;
+          t.getContext('2d').drawImage(c, x, y, w, h, 0, 0, w, h);
+          return t.toDataURL('image/webp', q).split(',')[1];
+        });
       },
-      { svg, W, H, q: Q[theme] },
+      { svg, W, H, q: Q[theme], tiles },
     );
-    const file = join(outDir, `relief-${name}-${theme}.webp`);
-    const buf = Buffer.from(b64, 'base64');
-    writeFileSync(file, buf);
-    console.log(`wrote public/img/topo/relief-${name}-${theme}.webp  ${W}×${H}  ${(buf.length / 1024).toFixed(0)} KB`);
+    out.forEach((b64, i) => {
+      const buf = Buffer.from(b64, 'base64');
+      writeFileSync(join(outDir, `relief-${name}-${theme}-${i}.webp`), buf);
+      console.log(`wrote relief-${name}-${theme}-${i}.webp  ${tiles[i][2]}×${tiles[i][3]}  ${(buf.length / 1024).toFixed(0)} KB`);
+    });
   }
 }
 await browser.close();

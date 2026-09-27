@@ -42,7 +42,7 @@
   --on-accent: #1e1004;
   --accent-soft: rgba(242, 154, 46, 0.16);
   --accent-line: rgba(190, 100, 15, 0.36);
-  --ember: #b83d0b; /* deadlines: "Leave by 10:50" */
+  --ember: #a8380a; /* deadlines: "Leave by 10:50" (AA on ember-soft, even over the live bloom) */
   --ember-soft: rgba(217, 84, 30, 0.11);
   --ember-line: rgba(200, 70, 15, 0.3);
 
@@ -50,7 +50,7 @@
   --night: #4349b8;
   --night-soft: rgba(74, 80, 196, 0.1);
 
-  --ok: #2b7236;
+  --ok: #286a33;
   --ok-soft: rgba(43, 114, 54, 0.1);
   --danger: #b3261e;
   --danger-soft: rgba(179, 38, 30, 0.09);
@@ -196,7 +196,7 @@
   --glow-mark: 0 0 10px rgba(255, 150, 60, 0.55);
   --btn-primary: linear-gradient(180deg, #f4bd6e, #eb9a48);
   --btn-primary-shadow: 0 1px 0 rgba(255, 245, 225, 0.45) inset, 0 6px 18px -8px rgba(255, 130, 40, 0.42);
-  --focus: #efbd7e;
+  --focus: var(--text); /* focus is neutral ink, never amber */
   --switch-on: var(--text);
 
   --sky-dawn: radial-gradient(70% 34% at 18% 24%, rgba(255, 128, 44, 0.16), transparent 72%), radial-gradient(60% 30% at 92% 4%, rgba(255, 170, 90, 0.06), transparent 70%), linear-gradient(180deg, #170e08 0%, rgba(14, 10, 7, 0) 62%);
@@ -300,13 +300,26 @@
 
   --grain: none;
 
-  --art-filter: url(#night-red); /* defined once by the shell: luminance → one red hue, dimmed */
+  /* A filter-function chain (GPU-composited in WebKit, unlike url(#svg)):
+     luminance → one red hue near #D8563A (hue 8-10°), dimmed. Tuned in
+     Chromium: white → #cc5e48, aspen gold → #c14c3a, mid grey → #813327. */
+  --art-filter: grayscale(1) brightness(0.5) sepia(1) saturate(4) hue-rotate(-40deg) brightness(0.8);
   --map-halo: var(--bg);
   --route: #b23e25;
   --route-2: #8f2a18;
   --route-case: rgba(5, 2, 2, 0.9);
   --stop: #d8563a;
   --stop-ring: #050202;
+}
+
+/* After that day's "Dark" time (html[data-after-dark], set by the shell from
+   the trip's sun times): the countdown and Now glows go out, and the live
+   card keeps only its rim. Night vision already has no glow. */
+[data-theme='dark'][data-after-dark] {
+  --glow: none;
+  --glow-mark: none;
+  --live-bloom: none;
+  --shadow-live: 0 0 0 1px var(--accent-line), 0 1px 0 var(--hi) inset;
 }
 
 /* Tokens that do not change with the theme. */
@@ -337,7 +350,7 @@
   --navbar-h: 44px;
   --tabbar-h: 62px;
   --tabbar-bottom: max(calc(var(--sab) - 10px), 12px);
-  --page-bottom: calc(var(--tabbar-h) + var(--tabbar-bottom) + 28px);
+  --page-bottom: calc(var(--tabbar-h) + var(--tabbar-bottom) + 40px); /* clears the bar and its scrim ramp */
   --content-max: 680px; /* readable column on iPad */
 
   /* motion (CSS side; springs live in src/ui/motion.ts) */

@@ -21,10 +21,10 @@
   outline: none;
 }
 
-/* One frame per page. Grain is baked into the frame background (a small
-   tile painted once), not a blended overlay. */
+/* One frame per page: the top page, and the previous page parked (hidden,
+   inert) underneath it for back and the edge swipe. Grain is baked into the
+   frame background (a small tile painted once), not a blended overlay. */
 .frame {
-  --dim: 0;
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -34,18 +34,20 @@
   box-shadow: -1px 0 0 var(--line), -16px 0 40px rgba(0, 0, 0, 0.14);
   will-change: transform;
 }
-.frame::after {
-  content: '';
+/* The push dim (a child of the frame, animated by opacity 0..1): warm ink
+   in light (pure black turns the warm page grey), black in dark and night.
+   Above the page's scrim and dock. */
+.frame-dim {
   position: absolute;
   inset: 0;
-  z-index: 60;
+  z-index: 99;
   pointer-events: none;
-  background: #000;
-  opacity: calc(var(--dim) * var(--dim-max, 0.1));
+  opacity: 0;
+  background: rgb(29 20 13 / 0.1);
 }
-[data-theme='dark'] .frame::after,
-[data-theme='night'] .frame::after {
-  --dim-max: 0.35;
+[data-theme='dark'] .frame-dim,
+[data-theme='night'] .frame-dim {
+  background: rgb(0 0 0 / 0.35);
 }
 
 .edge-swipe {
@@ -59,15 +61,18 @@
 }
 
 /* ---------- Tab bar ------------------------------------------------------ */
+/* The scrim is rendered by each Page (inside its frame, under its dock):
+   ~110 pt on a notched iPhone. Content never reads through the labels, and
+   --page-bottom lets the last line of a page rest above the ramp. */
 .tab-scrim {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: calc(var(--tabbar-h) + var(--tabbar-bottom) + 56px);
+  height: calc(var(--tabbar-h) + var(--tabbar-bottom) + 36px);
   z-index: 90;
   pointer-events: none;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent) 0%, color-mix(in srgb, var(--bg) 78%, transparent) 42%, var(--bg) 78%);
+  background: linear-gradient(180deg, transparent 0, color-mix(in srgb, var(--bg) 80%, transparent) 45%, var(--bg) 75%);
 }
 
 .tabbar {

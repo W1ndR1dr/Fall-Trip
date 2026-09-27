@@ -73,6 +73,13 @@ export function Page(props: PageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frame.path]);
 
+  // The toaster clears a dock (html[data-dock]) while this page is visible.
+  useEffect(() => {
+    if (!frame.present || !dock) return;
+    document.documentElement.toggleAttribute('data-dock', true);
+    return () => void document.documentElement.toggleAttribute('data-dock', false);
+  }, [frame.present, !!dock]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Tapping the active tab scrolls to the top.
   useEffect(() => {
     if (!frame.present) return;
@@ -83,11 +90,15 @@ export function Page(props: PageProps) {
 
   return (
     <ScrollContext.Provider value={scroller}>
-      <div ref={scroller} className={`page ${className}`} data-width={width} data-dock={dock ? '' : undefined} style={style}>
+      {/* layoutScroll: layout animations inside account for this scroll offset. */}
+      <motion.div ref={scroller} layoutScroll className={`page ${className}`} data-width={width} data-dock={dock ? '' : undefined} style={style}>
         {sky !== 'none' && <div className="page-sky" style={{ background: `var(--sky-${sky})` }} aria-hidden="true" />}
         <NavBar {...props} />
         <div className="page-body">{children}</div>
-      </div>
+      </motion.div>
+      {/* The tab bar's scrim lives in the page's frame: it moves with the page
+          and sits under the dock (z 90 < 95), never over it. */}
+      <div className="tab-scrim" aria-hidden="true" />
       {dock && <div className="page-dock">{dock}</div>}
     </ScrollContext.Provider>
   );
@@ -98,11 +109,40 @@ export function NavBar({ title, back, leading, actions, eyebrow, subtitle, hideT
   const scroller = useContext(ScrollContext);
   const { scrollY } = useScroll({ container: scroller });
   const large = !compact && !hideTitle;
-  // The glass fades in as content slides under; the compact title cross-fades
-  // in over the 40 px in which the large title leaves.
-  const glass = useTransform(scrollY, large ? [6, 30] : [0, 12], [0, 1]);
-  const titleOpacity = useTransform(scrollY, [28, 56], [0, 1]);
-  const titleY = useTransform(scrollY, [28, 56], [6, 0]);
+  const h1 = useRef<HTMLHeadingElement>(null);
+  const bar = useRef<HTMLDivElement>(null);
+
+  // Where the large title finishes passing under the bar: T = the scroll
+  // offset at which the h1's bottom meets the bar's bottom edge. Measured
+  // (eyebrows, subtitles, Dynamic Type and wrapping all move it).
+  // H0 = where the header's first line (eyebrow or title) meets the bar.
+  const T = useRef(40);
+  const H0 = useRef(0);
+  useLayoutEffect(() => {
+    const el = h1.current;
+    const sc = scroller.current;
+    if (!large || !el || !sc) return;
+    const measure = () => {
+      const base = sc.getBoundingClientRect().top - sc.scrollTop;
+      const barH = bar.current?.offsetHeight ?? 52;
+      T.current = Math.max(12, el.getBoundingClientRect().bottom - base - barH);
+      const head = el.parentElement?.getBoundingClientRect().top ?? 0;
+      H0.current = Math.max(0, Math.min(T.current - 14, head - base - barH));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [large, scroller]);
+
+  const ramp = (y: number, a: number, b: number) => Math.max(0, Math.min(1, (y - a) / (b - a)));
+  // The glass arrives as soon as any header line slides under the bar (so
+  // an eyebrow never passes a clear bar beside the back button). The compact
+  // title only fades in once the large title is fully under the bar, so the
+  // two are never readable at once.
+  const glass = useTransform(scrollY, (y) => (large ? ramp(y, H0.current, H0.current + 14) : ramp(y, 0, 12)));
+  const titleOpacity = useTransform(scrollY, (y) => (large ? ramp(y, T.current, T.current + 14) : ramp(y, 28, 56)));
+  const titleY = useTransform(scrollY, (y) => 6 - 6 * (large ? ramp(y, T.current, T.current + 14) : ramp(y, 28, 56)));
   // Pulling down stretches the large title a little, like iOS.
   const stretch = useTransform(scrollY, [-160, 0], [1.07, 1], { clamp: true });
 
@@ -115,7 +155,7 @@ export function NavBar({ title, back, leading, actions, eyebrow, subtitle, hideT
 
   return (
     <>
-      <div className="navbar">
+      <div className="navbar" ref={bar}>
         <motion.div className="navbar-glass" style={{ opacity: glass }} aria-hidden="true" />
         <div className="navbar-row">
           <div className="navbar-lead">{lead}</div>
@@ -124,11 +164,13 @@ export function NavBar({ title, back, leading, actions, eyebrow, subtitle, hideT
         </div>
       </div>
       {hideTitle || compact ? (
-        <h1 className="sr-only">{title}</h1>
+        <h1 className="sr-only" tabIndex={-1}>
+          {title}
+        </h1>
       ) : (
         <header className="page-head">
           {eyebrow && <div className="page-eyebrow t-eyebrow">{eyebrow}</div>}
-          <motion.h1 className="t-large-title page-title" style={{ scale: stretch }}>
+          <motion.h1 ref={h1} className="t-large-title page-title" style={{ scale: stretch }} tabIndex={-1}>
             {title}
           </motion.h1>
           {subtitle && <div className="page-subtitle t-body">{subtitle}</div>}

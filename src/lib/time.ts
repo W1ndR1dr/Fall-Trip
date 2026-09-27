@@ -1,5 +1,5 @@
 // Trip clock. All trip times are Pacific; the phones will be on Pacific time.
-import { DEPART, HOME_BY } from '../content/trip.js';
+import { DEPART, HOME_BY, sun } from '../content/trip.js';
 import { get, useStored } from './store';
 import { useEffect, useState } from 'react';
 
@@ -63,4 +63,56 @@ export function countdown(to: string | Date, from: Date) {
   const hours = Math.floor((ms % 86400e3) / 3600e3);
   const minutes = Math.floor((ms % 3600e3) / 60e3);
   return { ms, days, hours, minutes };
+}
+
+// ---------------------------------------------------------------------------
+// Sun times and "after dark"
+
+export type SunTimes = {
+  sunrise: Date;
+  sunset: Date;
+  goldenAM: [Date, Date];
+  goldenPM: [Date, Date];
+  /** End of astronomical-ish twilight: the content's "Dark" time. */
+  dark: Date;
+};
+
+const DAY_DATE: Record<TripDayId, string> = { fri: '2026-10-09', sat: '2026-10-10', sun: '2026-10-11' };
+// Content times are "h:mm" in PDT; morning values are am, the rest pm.
+const at = (day: TripDayId, hm: string, pm: boolean) => {
+  let [h, m] = hm.split(':').map(Number);
+  if (pm && h < 12) h += 12;
+  return new Date(`${DAY_DATE[day]}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00-07:00`);
+};
+const range = (day: TripDayId, r: string, pm: boolean): [Date, Date] => {
+  const [a, b] = r.split(/[–-]/);
+  return [at(day, a, pm), at(day, b, pm)];
+};
+
+/** A trip day's sun times as Dates (from src/content/trip.js `sun`). */
+export function sunTimes(day: TripDayId): SunTimes {
+  const s = (sun as Record<TripDayId, { sunrise: string; sunset: string; goldenAM: string; goldenPM: string; dark: string }>)[day];
+  return {
+    sunrise: at(day, s.sunrise, false),
+    sunset: at(day, s.sunset, true),
+    goldenAM: range(day, s.goldenAM, false),
+    goldenPM: range(day, s.goldenPM, true),
+    dark: at(day, s.dark, true),
+  };
+}
+
+/**
+ * True on a trip night: after that day's "Dark" time, or before sunrise on a
+ * trip day. Outside Oct 9–11 it is always false (home evenings keep the glow).
+ */
+export function isAfterDark(d: Date): boolean {
+  const day = tripDay(d);
+  if (!day) return false;
+  const t = sunTimes(day);
+  return d >= t.dark || (day !== 'fri' && d < t.sunrise);
+}
+
+/** Live `isAfterDark(now)` (re-checks every minute and on preview-time changes). */
+export function useAfterDark(): boolean {
+  return isAfterDark(useNow(60_000));
 }

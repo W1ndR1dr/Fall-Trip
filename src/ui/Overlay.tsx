@@ -1,7 +1,6 @@
 // Overlays: Sheet (Vaul), Toast, Fold (disclosure), EmptyState.
 import { AnimatePresence, motion } from 'motion/react';
-import { useId, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { Drawer } from 'vaul';
+import { Suspense, lazy, useId, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { CaretDown, X, type Icon } from './icons';
 import { fade, spring, useCalm } from './motion';
 import { Pressable } from './Pressable';
@@ -26,36 +25,21 @@ export type SheetProps = {
   snapPoints?: (number | string)[];
 };
 
+const loadSheet = () => import('./SheetImpl');
+const SheetImpl = lazy(loadSheet);
+/** Warm the sheet code (the shell does this when idle). */
+export const preloadSheet = () => loadSheet().catch(() => {});
+
 /**
  * Bottom sheet (Vaul): drag to dismiss, rubber-band, the page behind scales
- * and dims like iOS. Use for hints, choices and small forms, not for pages.
+ * back onto black like iOS. Keyboard focus moves into it on open. Use for
+ * hints, choices and small forms, not for pages.
  */
-export function Sheet({ open, onOpenChange, title, hideTitle, description, trigger, children, footer, snapPoints }: SheetProps) {
+export function Sheet(props: SheetProps) {
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange} shouldScaleBackground noBodyStyles snapPoints={snapPoints}>
-      {trigger && <Drawer.Trigger asChild>{trigger}</Drawer.Trigger>}
-      <Drawer.Portal>
-        <Drawer.Overlay className="sheet-overlay" />
-        <Drawer.Content className="sheet">
-          <div className="sheet-grabber" aria-hidden="true" />
-          <div className="sheet-head">
-            <Drawer.Title className={hideTitle ? 'sr-only' : 't-title-2 sheet-title'}>{title}</Drawer.Title>
-            <Drawer.Close asChild>
-              <button type="button" className="icon-btn icon-btn-plain icon-btn-sm sheet-close" aria-label="Close">
-                <X size={16} weight="bold" aria-hidden="true" />
-              </button>
-            </Drawer.Close>
-          </div>
-          {description ? (
-            <Drawer.Description className="t-body sheet-desc">{description}</Drawer.Description>
-          ) : (
-            <Drawer.Description className="sr-only">{typeof title === 'string' ? title : 'Details'}</Drawer.Description>
-          )}
-          <div className="sheet-body">{children}</div>
-          {footer && <div className="sheet-foot">{footer}</div>}
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+    <Suspense fallback={props.trigger ?? null}>
+      <SheetImpl {...props} />
+    </Suspense>
   );
 }
 
@@ -106,17 +90,25 @@ export function Toaster() {
   );
   const calm = useCalm();
   return (
+    // The container is the live region (one announcement per toast); the
+    // toast itself carries no role, so nothing is read twice.
     <div className="toaster" aria-live="polite" aria-atomic="true">
       <AnimatePresence>
         {t && (
           <motion.div
             key={t.id}
             className="toast"
-            role="status"
             initial={calm ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={calm ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.97, transition: fade.base }}
             transition={calm ? fade.base : spring.glide}
+            // Swipe down to dismiss.
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0.08, bottom: 0.9 }}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 24 || info.velocity.y > 400) dismissToast(t.id);
+            }}
           >
             {t.icon && <t.icon size={20} weight="bold" aria-hidden="true" className="toast-icon" />}
             <div className="toast-text">
@@ -124,15 +116,20 @@ export function Toaster() {
               {t.body && <div className="toast-body">{t.body}</div>}
             </div>
             {t.action && (
-              <Pressable className="toast-action" onClick={() => { t.action!.onClick(); dismissToast(t.id); }} scale={0.94}>
+              <Pressable
+                className="toast-action"
+                onClick={() => {
+                  t.action!.onClick();
+                  dismissToast(t.id);
+                }}
+                scale={0.94}
+              >
                 {t.action.label}
               </Pressable>
             )}
-            {!t.action && (
-              <button type="button" className="toast-close" aria-label="Dismiss" onClick={() => dismissToast(t.id)}>
-                <X size={14} weight="bold" aria-hidden="true" />
-              </button>
-            )}
+            <button type="button" className="toast-close" aria-label="Dismiss" onClick={() => dismissToast(t.id)}>
+              <X size={14} weight="bold" aria-hidden="true" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

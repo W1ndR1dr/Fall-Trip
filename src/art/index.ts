@@ -1,5 +1,5 @@
 // Shared imagery. Screens import from '@/art'.
-export { Terrain, Relief, RouteLine, StopDot, MapLabel, WaterLabel, useTerrain, reliefUrl, type TerrainProps, type MapLabelProps, type RouteLineProps } from './Terrain';
+export { Terrain, Relief, RouteLine, StopDot, MapLabel, WaterLabel, useTerrain, reliefTiles, cameraFor, useCamera, type Camera, type CameraValues, type TerrainProps, type MapLabelProps, type RouteLineProps } from './Terrain';
 export {
   REGIONS,
   EAST_TO_ROUTE,

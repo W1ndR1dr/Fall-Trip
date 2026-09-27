@@ -183,12 +183,17 @@ export function ProgressRing({ value, size = 44, stroke = 3, color = 'var(--acce
 
 export function Pips({ total, filled, variant = 'dot', color = 'var(--accent-mark)', label, size }: { total: number; filled: number; variant?: 'dot' | 'leaf'; color?: string; label?: string; size?: number }) {
   const calm = useCalm();
+  // Existing pips appear as they are; only a pip that fills later pops.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
     <span className={`pips pips-${variant}`} role="img" aria-label={label ?? `${filled} of ${total}`}>
       {Array.from({ length: total }, (_, i) => {
         const on = i < filled;
+        // Keyed by state: a pip that fills remounts and springs up from .45
+        // (spring.pop overshoots ~14%, then settles).
         return (
-          <motion.span key={i} className="pip" initial={false} animate={on && !calm ? { scale: [1, 1.35, 1] } : { scale: 1 }} transition={spring.pop}>
+          <motion.span key={`${i}-${on ? 'on' : 'off'}`} className="pip" initial={on && mounted && !calm ? { scale: 0.45 } : false} animate={{ scale: 1 }} transition={spring.pop}>
             {variant === 'leaf' ? <LeafPip on={on} color={color} size={size ?? 13} /> : <span className="pip-dot" style={{ background: on ? color : undefined, width: size, height: size }} data-on={on || undefined} />}
           </motion.span>
         );
