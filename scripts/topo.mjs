@@ -2,7 +2,7 @@
 // Data, public domain / various open licenses, see research-notes), build an
 // elevation grid, and trace contour lines with d3-contour.
 //
-//   node scripts/topo.mjs            → public/img/topo/*.json + *.svg
+//   node scripts/topo.mjs            → public/img/topo/*.json (+ previews in art/.out/)
 //
 // Output coordinates are rotated so EAST IS UP (the route runs bottom → top on
 // a phone): x = north→south across the width, y = east→west down the height.
@@ -115,7 +115,8 @@ async function region(name, { west, east, south, north, z, W, levels, simplify =
 <rect width="100%" height="100%" fill="#f5f0e6"/>
 ${layers.map((l) => `<path d="${l.d}" fill="none" stroke="${l.level <= 0 ? '#4a6b7a' : '#6b5d4d'}" stroke-opacity="${l.level % 1000 === 0 ? 0.55 : 0.28}" stroke-width="${l.level % 1000 === 0 ? 0.9 : 0.5}"/>`).join('\n')}
 </svg>`;
-  writeFileSync(`${OUT}/${name}.preview.svg`, svg);
+  mkdirSync("art/.out", { recursive: true });
+  writeFileSync(`art/.out/${name}.preview.svg`, svg);
   console.log(`${name}: ${W}×${H}, ${layers.length} levels, ${(JSON.stringify(json).length / 1024).toFixed(0)} KB`);
 }
 
