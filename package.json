@@ -10,5 +10,9 @@
     "serve": "npx --yes serve dist -l 5173",
     "test:offline": "node scripts/test-offline.mjs",
     "update": "node scripts/update-conditions.mjs && node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "d3-contour": "^4.0.2",
+    "pngjs": "^7.0.0"
   }
 }
