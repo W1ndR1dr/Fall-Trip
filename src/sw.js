@@ -1,5 +1,5 @@
 // Fall Trip service worker: precache everything, serve cache-first.
-// The build script replaces __VERSION__ and __PRECACHE__.
+// scripts/build.mjs stamps in the version and the precache list.
 const VERSION = '__VERSION__';
 const CACHE = 'fall-trip-' + VERSION;
 const PRECACHE = __PRECACHE__;

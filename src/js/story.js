@@ -26,9 +26,9 @@ function seeded(seed) {
 function sceneSVG() {
   const r = seeded(42);
   let stars = '';
-  for (let i = 0; i < 90; i++) {
-    const x = r() * 400, y = r() * 170, s = r() < 0.12 ? 1.4 : 0.7 + r() * 0.5;
-    stars += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s.toFixed(2)}" class="twinkle" style="--d:${(r() * 4).toFixed(2)}s"/>`;
+  for (let i = 0; i < 200; i++) {
+    const x = -400 + r() * 1200, y = r() * 170, s = r() < 0.12 ? 1.4 : 0.7 + r() * 0.5;
+    stars += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${s.toFixed(2)}"/>`;
   }
   let orchard = '';
   for (let row = 0; row < 3; row++) {
@@ -54,10 +54,10 @@ function sceneSVG() {
  <linearGradient id="milky" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#e8e4ff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
  <linearGradient id="lakeg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--lake-top)"/><stop offset="1" stop-color="var(--lake-bot)"/></linearGradient>
 </defs>
-<rect width="400" height="300" fill="url(#skyg)"/>
-<g id="stars" fill="#fff">${stars}<path d="M-20 170 C100 90 220 60 420 -10 L430 20 C230 90 110 120 -10 200Z" fill="url(#milky)"/></g>
+<rect x="-800" width="2000" height="300" fill="url(#skyg)"/>
+<g id="stars" fill="#fff">${stars}<path d="M-420 250 C-100 150 220 60 820 -60 L830 -30 C230 90 -90 180 -410 280Z" fill="url(#milky)"/></g>
 <g id="sun"><circle r="46" fill="url(#sunglow)"/><circle r="13" fill="#FFE6A3"/></g>
-<path id="far" d="M0 190 L30 160 L52 172 L84 128 L110 150 L140 112 L168 140 L196 104 L222 134 L250 118 L280 146 L310 110 L340 138 L372 120 L400 142 V300 H0Z" />
+<g id="world"><path id="far" d="M0 190 L30 160 L52 172 L84 128 L110 150 L140 112 L168 140 L196 104 L222 134 L250 118 L280 146 L310 110 L340 138 L372 120 L400 142 V300 H0Z" />
 <path id="snowcaps" d="M84 128 L92 138 L98 134 L104 142 L110 150 M140 112 L148 122 L154 118 L160 128 M196 104 L204 116 L210 112 L216 124 M310 110 L318 122 L324 118 L330 128" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".85"/>
 
 <g class="layer" data-layer="home">
@@ -93,7 +93,7 @@ function sceneSVG() {
 </g>
 <g class="layer" data-layer="night">
  <path d="M0 236 L60 200 L110 220 L170 180 L230 214 L290 190 L350 218 L400 204 V300 H0Z" fill="var(--night-ridge)"/>
- <g transform="translate(250 246)"><path d="M-30 0 L0 -26 L30 0Z" fill="var(--night-cabin)"/><rect x="-24" y="0" width="48" height="26" fill="var(--night-cabin)"/>
+ <g transform="translate(214 236)"><path d="M-30 0 L0 -26 L30 0Z" fill="var(--night-cabin)"/><rect x="-24" y="0" width="48" height="26" fill="var(--night-cabin)"/>
  <rect x="-12" y="6" width="10" height="9" fill="#FFCB6B" class="window"/><rect x="4" y="6" width="10" height="9" fill="#FFCB6B" class="window"/>
  <rect x="16" y="-22" width="6" height="12" fill="var(--night-cabin)"/></g>
  <g fill="var(--night-ridge)">${[40, 64, 330, 360].map((x) => `<path d="M${x} 222 l-9 22 h5 l-8 16 h24 l-8 -16 h5z"/>`).join('')}</g>
@@ -104,6 +104,8 @@ function sceneSVG() {
 </g>
 
 <g id="road"><path d="M0 286 H400" stroke="var(--road)" stroke-width="16"/><path d="M0 286 H400" stroke="var(--road-line)" stroke-width="1.6" stroke-dasharray="10 12"/></g>
+</g>
+<use href="#world" transform="scale(-1 1)"/><use href="#world" transform="translate(800 0) scale(-1 1)"/>
 <g id="car"><g transform="translate(-22 -18)">
  <rect x="2" y="8" width="44" height="12" rx="4" fill="var(--car)"/><path d="M10 8 L16 0 H34 L40 8Z" fill="var(--car)"/>
  <path d="M18 2 H25 V8 H13Z M27 2 H33 L37 8 H27Z" fill="#cfe6f2"/>
@@ -168,6 +170,22 @@ export function mountStory(root, chapters, { onChapter } = {}) {
     car.setAttribute('transform', `translate(${cx.toFixed(1)} 280)`);
   }
 
+  // Wide screens: widen the viewBox (mirrored terrain fills the sides) so the
+  // whole sky-to-road height always shows. Narrow screens: crop the sides.
+  function fit() {
+    const r = svg.getBoundingClientRect();
+    const A = r.width / Math.max(1, r.height);
+    if (A > 4 / 3) {
+      const W = Math.min(1200, 300 * A);
+      svg.setAttribute('viewBox', `${(200 - W / 2).toFixed(1)} 0 ${W.toFixed(1)} 300`);
+      svg.setAttribute('preserveAspectRatio', 'xMidYMax slice');
+    } else {
+      svg.setAttribute('viewBox', '0 0 400 300');
+      svg.setAttribute('preserveAspectRatio', 'xMidYMax slice');
+    }
+  }
+  fit();
+
   let current = -1;
   let ticking = false;
   function measure() {
@@ -195,6 +213,7 @@ export function mountStory(root, chapters, { onChapter } = {}) {
       onChapter && onChapter(chapters[snapped], snapped);
     }
   }
+  const onResize = () => { fit(); onScroll(); };
   const onScroll = () => {
     if (!ticking) {
       ticking = true;
@@ -202,10 +221,10 @@ export function mountStory(root, chapters, { onChapter } = {}) {
     }
   };
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
+  window.addEventListener('resize', onResize);
   measure();
   return () => {
     window.removeEventListener('scroll', onScroll);
-    window.removeEventListener('resize', onScroll);
+    window.removeEventListener('resize', onResize);
   };
 }

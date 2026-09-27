@@ -37,8 +37,8 @@ const version = hash.digest('hex').slice(0, 12);
 const precache = ['./', ...files.map((f) => './' + f), './version.json'];
 const swPath = join(dist, 'sw.js');
 const sw = (await readFile(swPath, 'utf8'))
-  .replace('__VERSION__', version)
-  .replace('__PRECACHE__', JSON.stringify(precache, null, 2));
+  .replace("'__VERSION__'", JSON.stringify(version))
+  .replace('= __PRECACHE__;', '= ' + JSON.stringify(precache, null, 2) + ';');
 await writeFile(swPath, sw);
 
 // Expose the build version to the page (shown on the About screen).
