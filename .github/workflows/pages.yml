@@ -1,8 +1,8 @@
 name: Deploy Fall Trip to GitHub Pages
 
+# Auto-deploy is paused while the UI is rebuilt, so the live site keeps the
+# previous version until the new one is finished and verified.
 on:
-  push:
-    branches: [main, claude/fall-trip-web-app-pfvdnq]
   workflow_dispatch:
 
 permissions:
