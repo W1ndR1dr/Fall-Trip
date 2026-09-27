@@ -16,8 +16,8 @@ const only = process.argv[2] ? new RegExp(process.argv[2]) : null;
 const tmp = join(root, 'art/.out');
 await rm(tmp, { recursive: true, force: true });
 await mkdir(tmp, { recursive: true });
-await mkdir(join(root, 'src/img/art'), { recursive: true });
-await mkdir(join(root, 'src/img/tex'), { recursive: true });
+await mkdir(join(root, 'public/img/art'), { recursive: true });
+await mkdir(join(root, 'public/img/tex'), { recursive: true });
 
 const browser = await chromium.launch();
 const jobs = [];
@@ -34,7 +34,7 @@ for (const j of jobs) {
   const png = join(tmp, `${j.dir}-${j.name}.png`);
   await page.screenshot({ path: png, omitBackground: !j.opaque, clip: { x: 0, y: 0, width: w, height: h } });
   await page.close();
-  const out = join(root, 'src/img', j.dir, `${j.name}.webp`);
+  const out = join(root, 'public/img', j.dir, `${j.name}.webp`);
   execFileSync('python3', ['-c', `from PIL import Image; im=Image.open(${JSON.stringify(png)}); im.save(${JSON.stringify(out)}, 'WEBP', quality=${j.opaque ? 80 : 86}, method=6)`]);
   console.log('painted', j.dir + '/' + j.name + '.webp', `${w}x${h}@${j.scale}x`);
 }

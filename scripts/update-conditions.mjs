@@ -1,13 +1,13 @@
 // Refresh live conditions baked into the app (run ~Wed Oct 7, then again
-// Friday morning if you like). Writes src/js/content/conditions.js.
+// Friday morning if you like). Writes src/content/conditions.js.
 //   node scripts/update-conditions.mjs
 // Sources: NWS API (api.weather.gov), NPS Yosemite conditions page, Caltrans
 // road-conditions text. The fall color report is prose, so it's updated by
-// hand in src/js/content/trip.js (see UPDATE.md).
+// hand in src/content/trip.js (see UPDATE.md).
 import { writeFile } from 'node:fs/promises';
 
 const UA = { 'User-Agent': 'FallTrip family trip app (personal, non-commercial)', Accept: 'application/geo+json, text/html' };
-const out = new URL('../src/js/content/conditions.js', import.meta.url);
+const out = new URL('../src/content/conditions.js', import.meta.url);
 
 const PLACES = [
   ['Mammoth Lakes', 37.6485, -118.9721],
