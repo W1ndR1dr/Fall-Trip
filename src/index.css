@@ -1,1 +1,7 @@
 @import 'tailwindcss';
+@import './ui/fonts.css';
+@import './ui/tokens.css';
+@import './ui/base.css';
+@import './ui/ui.css';
+@import './art/art.css';
+@import './app/shell.css';

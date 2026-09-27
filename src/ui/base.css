@@ -1,0 +1,333 @@
+/* ==========================================================================
+   Tailwind v4 mapping + document base + type scale.
+   Type is authored in rem against a 17 px root (the iOS body size), written
+   as calc(<px>rem / 17) so the design px stays readable. On iPhone/iPad the
+   root follows Dynamic Type through `font: -apple-system-body`. Spacing,
+   radii and hit areas stay in px: they should not grow with text.
+   ========================================================================== */
+
+@theme inline {
+  --spacing: 4px;
+
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-bg-3: var(--bg-3);
+  --color-fill: var(--fill);
+  --color-fill-2: var(--fill-2);
+  --color-fill-3: var(--fill-3);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-text-4: var(--text-4);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-text: var(--accent-text);
+  --color-accent-mark: var(--accent-mark);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-on-accent: var(--on-accent);
+  --color-ember: var(--ember);
+  --color-ember-soft: var(--ember-soft);
+  --color-night: var(--night);
+  --color-night-soft: var(--night-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-water: var(--water);
+  --color-water-text: var(--water-text);
+  --color-kid-1: var(--kid-1);
+  --color-kid-2: var(--kid-2);
+  --color-kid-3: var(--kid-3);
+  --color-glass: var(--glass);
+
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+  --font-kid: var(--font-kid);
+
+  --radius-tag: var(--r-tag);
+  --radius-well: var(--r-well);
+  --radius-seg: var(--r-seg);
+  --radius-tile: var(--r-tile);
+  --radius-card: var(--r-card);
+  --radius-button: var(--r-button);
+  --radius-sheet: var(--r-sheet);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-float: var(--shadow-float);
+  --shadow-live: var(--shadow-live);
+
+  --text-large-title: calc(34rem / 17);
+  --text-title-1: calc(28rem / 17);
+  --text-title-2: calc(24rem / 17);
+  --text-title-3: calc(21rem / 17);
+  --text-headline: calc(16.5rem / 17);
+  --text-body: calc(15rem / 17);
+  --text-callout: calc(14rem / 17);
+  --text-footnote: calc(13rem / 17);
+  --text-caption: calc(11.5rem / 17);
+}
+
+@layer base {
+  html {
+    font-size: 106.25%; /* 17 px: the iOS body size, respecting browser zoom */
+    font-family: var(--font-sans);
+    line-height: 1.47;
+    font-feature-settings: 'cv05' 1; /* Inter's tailed l: l / I / 1 never blur in glare */
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; /* no double-tap zoom, no 300 ms delay */
+    background: var(--bg);
+    color: var(--text);
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  /* iPhone/iPad only (touch-callout is iOS-only): follow Dynamic Type.
+     macOS resolves -apple-system-body to 13 px, so it must not apply there. */
+  @supports (font: -apple-system-body) and (-webkit-touch-callout: none) {
+    html {
+      font: -apple-system-body;
+      font-family: var(--font-sans);
+      line-height: 1.47;
+    }
+  }
+  body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: var(--bg);
+    font-size: calc(15rem / 17);
+    letter-spacing: -0.006em;
+  }
+  #root {
+    position: fixed;
+    inset: 0;
+    isolation: isolate;
+  }
+  h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd {
+    margin: 0;
+  }
+  h1, h2, h3, h4 {
+    font-weight: inherit;
+    font-size: inherit;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  button {
+    font: inherit;
+    color: inherit;
+    letter-spacing: inherit;
+  }
+  img, svg {
+    display: block;
+  }
+  :focus {
+    outline: none;
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--accent-soft);
+  }
+  input, textarea, select {
+    font: inherit;
+    color: inherit;
+    font-size: max(16px, 1em); /* never below 16 px: iOS zooms into smaller fields */
+  }
+  [hidden] {
+    display: none !important;
+  }
+}
+
+/* ---------- Type scale ----------------------------------------------------
+   One class per role. Pair with a color utility only when the role's
+   default is wrong for the context (e.g. `t-footnote text-text-2`). */
+@layer components {
+  .t-countdown {
+    font-family: var(--font-serif);
+    font-weight: 330;
+    font-size: clamp(calc(96rem / 17), 36vw, calc(150rem / 17));
+    line-height: 0.8;
+    letter-spacing: -0.055em;
+    font-variation-settings: 'opsz' 72;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .t-large-title {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: calc(34rem / 17);
+    line-height: 1.06;
+    letter-spacing: -0.022em;
+    color: var(--text);
+  }
+  .t-title-1 {
+    font-family: var(--font-serif);
+    font-weight: 420;
+    font-size: calc(27rem / 17);
+    line-height: 1.1;
+    letter-spacing: -0.018em;
+    color: var(--text);
+  }
+  .t-title-2 {
+    font-family: var(--font-serif);
+    font-weight: 440;
+    font-size: calc(23rem / 17);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    color: var(--text);
+  }
+  .t-title-3 {
+    font-family: var(--font-serif);
+    font-weight: 450;
+    font-size: calc(20rem / 17);
+    line-height: 1.18;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .t-units {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: calc(34rem / 17);
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .t-scripture {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: calc(19rem / 17);
+    line-height: 1.5;
+    letter-spacing: -0.004em;
+    font-variation-settings: 'opsz' 18;
+    hanging-punctuation: first;
+    color: var(--text);
+  }
+  .t-reading {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    font-size: calc(18.5rem / 17);
+    line-height: 1.5;
+    letter-spacing: -0.003em;
+    font-variation-settings: 'opsz' 16;
+    color: var(--text);
+  }
+  .t-headline {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: calc(16.5rem / 17);
+    line-height: 1.3;
+    letter-spacing: -0.012em;
+    color: var(--text);
+  }
+  .t-body {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: calc(15rem / 17);
+    line-height: 1.47;
+    letter-spacing: -0.006em;
+    color: var(--text-2);
+  }
+  .t-callout {
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-size: calc(14rem / 17);
+    line-height: 1.45;
+    letter-spacing: -0.003em;
+    color: var(--text-2);
+  }
+  .t-footnote {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: calc(13rem / 17);
+    line-height: 1.35;
+    color: var(--text-3);
+  }
+  .t-caption {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: calc(11.5rem / 17);
+    line-height: 1.4;
+    color: var(--text-3);
+  }
+  .t-eyebrow {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: calc(12rem / 17);
+    line-height: 1.33;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+  .t-verse {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: calc(10rem / 17);
+    line-height: 1;
+    vertical-align: 0.55em;
+    margin-right: 3px;
+    color: var(--accent-text);
+    letter-spacing: 0;
+  }
+  .t-kid {
+    font-family: var(--font-kid);
+    font-size: calc(22rem / 17);
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+  /* Practical numbers (times, counts, sun times): always tabular Inter. */
+  .t-num,
+  .num {
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  /* "9:30" with a smaller "am". */
+  .t-period {
+    font-size: 0.72em;
+    font-weight: 600;
+    color: var(--text-3);
+    margin-left: 1px;
+    letter-spacing: 0;
+  }
+
+  .gutter {
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+  }
+  .gutter-text {
+    padding-left: var(--gutter-text);
+    padding-right: var(--gutter-text);
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  /* Art (specimens, terrain rasters) dims in dark and red-shifts at night. */
+  .art {
+    filter: var(--art-filter);
+  }
+}

@@ -2,7 +2,7 @@
 // Data, public domain / various open licenses, see research-notes), build an
 // elevation grid, and trace contour lines with d3-contour.
 //
-//   node scripts/topo.mjs            → public/img/topo/*.json (+ previews in art/.out/)
+//   node scripts/topo.mjs            → art/topo/*.json (+ previews in art/.out/)
 //
 // Output coordinates are rotated so EAST IS UP (the route runs bottom → top on
 // a phone): x = north→south across the width, y = east→west down the height.
@@ -12,7 +12,7 @@ import { contours } from 'd3-contour';
 import { PNG } from 'pngjs';
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
 
-const OUT = 'public/img/topo';
+const OUT = 'art/topo';
 const CACHE = 'art/.out/tiles';
 mkdirSync(OUT, { recursive: true });
 mkdirSync(CACHE, { recursive: true });

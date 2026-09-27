@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 // Relative base: the app is served from https://<user>.github.io/Fall-Trip/
 // and routes live in the hash, so the document is always ./index.html.
@@ -30,8 +31,8 @@ export default defineConfig({
         scope: './',
         display: 'standalone',
         orientation: 'any',
-        background_color: '#f6f1e7',
-        theme_color: '#f6f1e7',
+        background_color: '#f4eee5',
+        theme_color: '#f4eee5',
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
@@ -48,5 +49,7 @@ export default defineConfig({
       },
     }),
   ],
-  build: { target: 'es2022', assetsInlineLimit: 0, sourcemap: false },
+  resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
+  // The main chunk is React + Motion + Vaul (~160 KB gzip), precached once.
+  build: { target: 'es2022', assetsInlineLimit: 0, sourcemap: false, chunkSizeWarningLimit: 700 },
 });

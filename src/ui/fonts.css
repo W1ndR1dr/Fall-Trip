@@ -1,0 +1,41 @@
+/* Self-hosted fonts, Latin subset only (precached by the service worker).
+   Newsreader: display and reading serif (variable opsz + wght, plus italic).
+   Inter: every UI string, time and number (variable opsz + wght).
+   Andika: kids' large print only. Licenses: src/assets/fonts/LICENSE-*.txt */
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../../node_modules/@fontsource-variable/newsreader/files/newsreader-latin-opsz-normal.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+/* The italic only sets a word or two ("days", water labels), so it ships
+   without the opsz axis (65 KB instead of 147 KB). */
+@font-face {
+  font-family: 'Newsreader';
+  src: url('../../node_modules/@fontsource-variable/newsreader/files/newsreader-latin-wght-italic.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter';
+  src: url('../../node_modules/@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Andika';
+  src: url('../../node_modules/@fontsource/andika/files/andika-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Andika';
+  src: url('../../node_modules/@fontsource/andika/files/andika-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

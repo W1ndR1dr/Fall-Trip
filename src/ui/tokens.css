@@ -1,0 +1,346 @@
+/* ==========================================================================
+   Design tokens. Three palettes on <html data-theme>:
+     light  sunrise; the daytime primary for bright sun
+     dark   evening, with night discipline (capped ink, soft accents)
+     night  red night vision for stargazing (no glow, nothing bright)
+   The inline script in index.html sets data-theme before first paint; the
+   media query below only matters when scripts are off.
+
+   Rule: light carries meaning. amber/ember/glow mark only what is live,
+   found, golden hour, the route, or a deadline. Everything else is ink.
+
+   Contrast is checked by `node scripts/contrast.mjs` (reads this file).
+   ========================================================================== */
+
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  /* surfaces */
+  --bg: #f4eee5; /* page. Must equal THEME_COLOR.light and the manifest */
+  --bg-2: #ffffff; /* cards, grouped lists */
+  --bg-3: #ece4d8; /* wells, raised controls on cards */
+  --bg-sheet: #faf7f2; /* sheets */
+  --fill: rgba(70, 40, 15, 0.05);
+  --fill-2: rgba(70, 40, 15, 0.085);
+  --fill-3: rgba(70, 40, 15, 0.13); /* pressed */
+  --line: rgba(70, 40, 15, 0.1);
+  --line-2: rgba(70, 40, 15, 0.17);
+  --hi: rgba(255, 255, 255, 0.9); /* top-edge highlight */
+
+  /* ink */
+  --text: #1d140d;
+  --text-2: #56453a;
+  --text-3: #6f5c4b;
+  --text-4: rgba(70, 40, 15, 0.38); /* placeholders, disabled (never sole carrier of meaning) */
+
+  /* light: sun, ember */
+  --accent: #f29a2e; /* fills only, always with --on-accent ink */
+  --accent-2: #d9541e;
+  --accent-text: #9c4905;
+  --accent-mark: #b65a09; /* pips, progress, live dot, map stops (3:1 on bg and sky) */
+  --on-accent: #1e1004;
+  --accent-soft: rgba(242, 154, 46, 0.16);
+  --accent-line: rgba(190, 100, 15, 0.36);
+  --ember: #b83d0b; /* deadlines: "Leave by 10:50" */
+  --ember-soft: rgba(217, 84, 30, 0.11);
+  --ember-line: rgba(200, 70, 15, 0.3);
+
+  /* the one cool color: dark, night sky, devotions */
+  --night: #4349b8;
+  --night-soft: rgba(74, 80, 196, 0.1);
+
+  --ok: #2b7236;
+  --ok-soft: rgba(43, 114, 54, 0.1);
+  --danger: #b3261e;
+  --danger-soft: rgba(179, 38, 30, 0.09);
+
+  --water: #d5e2e4;
+  --water-text: #4f6770;
+
+  /* each child's color: fill + numeral ink, soft tint, and text-safe tone */
+  --kid-1: #cc7a0a; /* amber */
+  --kid-1-ink: #1e1004;
+  --kid-1-fill: var(--kid-1);
+  --kid-1-text: #8f4a00;
+  --kid-2: #c9471a; /* ember */
+  --kid-2-ink: #ffffff;
+  --kid-2-fill: var(--kid-2);
+  --kid-2-text: #a83a10;
+  --kid-3: #4f7d34; /* moss */
+  --kid-3-ink: #ffffff;
+  --kid-3-fill: var(--kid-3);
+  --kid-3-text: #3f6a28;
+
+  /* leaf pigments (kids' explainer) */
+  --pig-green: #4f8a2e;
+  --pig-gold: #e8a818;
+  --pig-red: #c0321c;
+
+  /* materials */
+  --glass: rgba(251, 248, 243, 0.7);
+  --glass-strong: rgba(250, 246, 240, 0.86);
+  --glass-line: rgba(70, 40, 15, 0.1);
+  --seg-thumb: #ffffff;
+  --seg-thumb-shadow: 0 0 0 0.5px rgba(70, 40, 15, 0.12), 0 2px 6px -2px rgba(90, 50, 15, 0.22);
+
+  /* elevation: depth from light. Light mode uses a low-sun raked shadow. */
+  --shadow-card: 0 0 0 1px rgba(70, 40, 15, 0.075), 0 1px 2px rgba(90, 50, 15, 0.06), 5px 12px 26px -12px rgba(120, 70, 20, 0.26);
+  --shadow-raised: 0 0 0 0.5px rgba(70, 40, 15, 0.1), 0 1px 1px rgba(90, 50, 15, 0.05), 2px 4px 10px -4px rgba(120, 70, 20, 0.2);
+  --shadow-float: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 0 0 0.5px var(--glass-line), 8px 18px 36px -14px rgba(110, 60, 15, 0.3), 0 3px 10px rgba(90, 50, 15, 0.08);
+  --shadow-live: 0 0 0 1px var(--accent-line), 6px 16px 32px -16px rgba(160, 80, 10, 0.34);
+  --live-bloom: radial-gradient(110% 80% at 0% 0%, rgba(255, 190, 110, 0.24), transparent 60%);
+  --glow: none;
+  --glow-mark: none;
+  --btn-primary: linear-gradient(180deg, #f7ae4a, #ee8a26);
+  --btn-primary-shadow: 0 1px 0 rgba(255, 245, 225, 0.6) inset, 0 6px 16px -8px rgba(200, 100, 20, 0.55);
+  --focus: #1d140d;
+  --switch-on: var(--text);
+
+  /* ambient sky at the top of each page (says where the sun is) */
+  --sky-dawn: radial-gradient(70% 34% at 16% 20%, rgba(255, 186, 110, 0.24), transparent 72%), linear-gradient(180deg, #efe2d1 0%, rgba(244, 238, 229, 0) 62%);
+  --sky-day: radial-gradient(80% 34% at 85% 0%, rgba(255, 205, 130, 0.3), transparent 70%), linear-gradient(180deg, #f0e6d9 0%, rgba(244, 238, 229, 0) 50%);
+  --sky-candle: radial-gradient(90% 34% at 50% 0%, rgba(255, 205, 140, 0.24), transparent 70%);
+  --sky-plain: linear-gradient(180deg, #efe7dc 0%, rgba(244, 238, 229, 0) 40%);
+
+  /* grain, baked into the page background (small tile, no blend layer) */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .27 0 0 0 0 .16 0 0 0 0 .06 0 0 0 .55 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.34'/%3E%3C/svg%3E");
+
+  /* art and topography */
+  --art-filter: none;
+  --map-halo: var(--bg);
+  --route: #c0620a;
+  --route-2: #c2410c;
+  --route-case: rgba(255, 255, 255, 0.95);
+  --stop: #1d140d;
+  --stop-ring: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+  }
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #0e0a07; /* THEME_COLOR.dark */
+  --bg-2: #18120e;
+  --bg-3: #221a14;
+  --bg-sheet: #1a1410;
+  --fill: rgba(255, 226, 196, 0.06);
+  --fill-2: rgba(255, 226, 196, 0.1);
+  --fill-3: rgba(255, 226, 196, 0.15);
+  --line: rgba(255, 226, 196, 0.085);
+  --line-2: rgba(255, 226, 196, 0.15);
+  --hi: rgba(255, 236, 214, 0.06);
+
+  /* night discipline: ink capped near #E2DACD */
+  --text: #e2dacd;
+  --text-2: #b4a595;
+  --text-3: #9a8a79;
+  --text-4: rgba(255, 226, 196, 0.3);
+
+  --accent: #f0ae58;
+  --accent-2: #e5824f;
+  --accent-text: #efbd7e;
+  --accent-mark: #ecaa56;
+  --on-accent: #1e1004;
+  --accent-soft: rgba(240, 170, 90, 0.13);
+  --accent-line: rgba(240, 175, 95, 0.3);
+  --ember: #ef9068;
+  --ember-soft: rgba(229, 120, 70, 0.14);
+  --ember-line: rgba(235, 130, 80, 0.32);
+
+  --night: #a4abee;
+  --night-soft: rgba(150, 160, 255, 0.13);
+
+  --ok: #93c68f;
+  --ok-soft: rgba(147, 198, 143, 0.12);
+  --danger: #f0928a;
+  --danger-soft: rgba(240, 120, 110, 0.13);
+
+  --water: #0c1316;
+  --water-text: #8ea3aa;
+
+  --kid-1: #eaa955;
+  --kid-1-ink: #1e1004;
+  --kid-1-fill: var(--kid-1);
+  --kid-1-text: #efbd7e;
+  --kid-2: #e27e5a;
+  --kid-2-ink: #1e0a04;
+  --kid-2-fill: var(--kid-2);
+  --kid-2-text: #ee9c7e;
+  --kid-3: #8cb672;
+  --kid-3-ink: #0d1606;
+  --kid-3-fill: var(--kid-3);
+  --kid-3-text: #a3c78c;
+
+  --pig-green: #7fae5c;
+  --pig-gold: #eab547;
+  --pig-red: #d9573d;
+
+  --glass: rgba(26, 20, 15, 0.64);
+  --glass-strong: rgba(22, 17, 13, 0.82);
+  --glass-line: rgba(255, 230, 205, 0.1);
+  --seg-thumb: #2c231b;
+  --seg-thumb-shadow: 0 0 0 0.5px var(--line-2), 0 2px 8px -2px rgba(0, 0, 0, 0.4);
+
+  --shadow-card: 0 1px 0 var(--hi) inset, 0 0 0 1px var(--line);
+  --shadow-raised: 0 1px 0 var(--hi) inset, 0 0 0 0.5px var(--line-2);
+  --shadow-float: 0 1px 0 rgba(255, 240, 220, 0.07) inset, 0 0 0 0.5px var(--glass-line), 0 18px 40px -12px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-live: 0 0 0 1px var(--accent-line), 0 1px 0 var(--hi) inset, 0 16px 36px -22px rgba(255, 120, 30, 0.42);
+  --live-bloom: radial-gradient(110% 80% at 0% 0%, rgba(255, 160, 70, 0.1), transparent 60%);
+  --glow: 0 0 18px rgba(255, 140, 50, 0.26), 0 0 48px rgba(255, 100, 30, 0.12);
+  --glow-mark: 0 0 10px rgba(255, 150, 60, 0.55);
+  --btn-primary: linear-gradient(180deg, #f4bd6e, #eb9a48);
+  --btn-primary-shadow: 0 1px 0 rgba(255, 245, 225, 0.45) inset, 0 6px 18px -8px rgba(255, 130, 40, 0.42);
+  --focus: #efbd7e;
+  --switch-on: var(--text);
+
+  --sky-dawn: radial-gradient(70% 34% at 18% 24%, rgba(255, 128, 44, 0.16), transparent 72%), radial-gradient(60% 30% at 92% 4%, rgba(255, 170, 90, 0.06), transparent 70%), linear-gradient(180deg, #170e08 0%, rgba(14, 10, 7, 0) 62%);
+  --sky-day: radial-gradient(80% 36% at 85% 0%, rgba(255, 176, 80, 0.13), transparent 70%), linear-gradient(180deg, #17100a 0%, rgba(14, 10, 7, 0) 50%);
+  --sky-candle: radial-gradient(90% 34% at 50% 0%, rgba(255, 150, 60, 0.09), transparent 70%);
+  --sky-plain: radial-gradient(90% 30% at 50% 0%, rgba(255, 150, 60, 0.06), transparent 70%);
+
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .9 0 0 0 0 .8 0 0 0 .5 -.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+
+  --art-filter: brightness(0.86);
+  --map-halo: var(--bg);
+  --route: #f3b766;
+  --route-2: #ee7f45;
+  --route-case: rgba(10, 6, 3, 0.85);
+  --stop: #f4dfc0;
+  --stop-ring: rgba(14, 10, 7, 0.9);
+}
+
+/* Night vision: one red hue at three steps on near-black. No glow, no
+   cool colors, art red-shifted and dimmed. Keeps eyes dark-adapted. */
+[data-theme='night'] {
+  color-scheme: dark;
+
+  --bg: #050202; /* THEME_COLOR.night */
+  --bg-2: #0c0504;
+  --bg-3: #140806;
+  --bg-sheet: #0e0605;
+  --fill: rgba(216, 86, 58, 0.07);
+  --fill-2: rgba(216, 86, 58, 0.11);
+  --fill-3: rgba(216, 86, 58, 0.16);
+  --line: rgba(216, 86, 58, 0.14);
+  --line-2: rgba(216, 86, 58, 0.24);
+  --hi: rgba(216, 86, 58, 0.05);
+
+  --text: #e8664a;
+  --text-2: #d8563a;
+  --text-3: #cf5438;
+  --text-4: rgba(216, 86, 58, 0.45);
+
+  --accent: #3d130a;
+  --accent-2: #8f2a18;
+  --accent-text: #e8664a;
+  --accent-mark: #b23e25;
+  --on-accent: #ee6e50;
+  --accent-soft: rgba(143, 42, 24, 0.3);
+  --accent-line: rgba(178, 62, 37, 0.5);
+  --ember: #e8664a;
+  --ember-soft: rgba(143, 42, 24, 0.3);
+  --ember-line: rgba(178, 62, 37, 0.5);
+
+  --night: #e8664a;
+  --night-soft: rgba(143, 42, 24, 0.22);
+
+  --ok: #e8664a;
+  --ok-soft: rgba(143, 42, 24, 0.22);
+  --danger: #e8664a;
+  --danger-soft: rgba(143, 42, 24, 0.3);
+
+  --water: #080303;
+  --water-text: #cc5236;
+
+  --kid-1: #e8664a;
+  --kid-1-ink: #e8664a;
+  --kid-1-fill: #2a0c06;
+  --kid-1-text: #d8563a;
+  --kid-2: #c24d31;
+  --kid-2-ink: #e8664a;
+  --kid-2-fill: #200905;
+  --kid-2-text: #d8563a;
+  --kid-3: #a63f26;
+  --kid-3-ink: #e8664a;
+  --kid-3-fill: #170705;
+  --kid-3-text: #d8563a;
+
+  --pig-green: #5e1b0f;
+  --pig-gold: #b8472b;
+  --pig-red: #8f2a18;
+
+  --glass: rgba(12, 5, 4, 0.72);
+  --glass-strong: rgba(10, 4, 3, 0.88);
+  --glass-line: rgba(216, 86, 58, 0.14);
+  --seg-thumb: #1f0b07;
+  --seg-thumb-shadow: 0 0 0 0.5px var(--line-2);
+
+  --shadow-card: 0 0 0 1px var(--line);
+  --shadow-raised: 0 0 0 0.5px var(--line-2);
+  --shadow-float: 0 0 0 0.5px var(--glass-line), 0 18px 40px -12px rgba(0, 0, 0, 0.8);
+  --shadow-live: 0 0 0 1px var(--accent-line);
+  --live-bloom: none;
+  --glow: none;
+  --glow-mark: none;
+  --btn-primary: #3d130a;
+  --btn-primary-shadow: none;
+  --focus: #d8563a;
+  --switch-on: #8f2a18;
+
+  --sky-dawn: none;
+  --sky-day: none;
+  --sky-candle: none;
+  --sky-plain: none;
+
+  --grain: none;
+
+  --art-filter: url(#night-red); /* defined once by the shell: luminance → one red hue, dimmed */
+  --map-halo: var(--bg);
+  --route: #b23e25;
+  --route-2: #8f2a18;
+  --route-case: rgba(5, 2, 2, 0.9);
+  --stop: #d8563a;
+  --stop-ring: #050202;
+}
+
+/* Tokens that do not change with the theme. */
+:root {
+  --font-serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
+  --font-kid: 'Andika', 'Inter', system-ui, sans-serif;
+
+  /* radius: concentric (inner = outer - padding) */
+  --r-tag: 6px;
+  --r-well: 11px;
+  --r-seg: 12px;
+  --r-seg-inner: 9px;
+  --r-tile: 16px;
+  --r-card: 22px;
+  --r-button: 20px;
+  --r-tabbar: 31px;
+  --r-lens: 27px;
+  --r-sheet: 38px;
+
+  /* layout */
+  --gutter: 16px; /* cards */
+  --gutter-text: 20px; /* titles and text blocks */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --navbar-h: 44px;
+  --tabbar-h: 62px;
+  --tabbar-bottom: max(calc(var(--sab) - 10px), 12px);
+  --page-bottom: calc(var(--tabbar-h) + var(--tabbar-bottom) + 28px);
+  --content-max: 680px; /* readable column on iPad */
+
+  /* motion (CSS side; springs live in src/ui/motion.ts) */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}

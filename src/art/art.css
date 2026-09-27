@@ -1,0 +1,41 @@
+/* Terrain and specimen art. */
+@layer components {
+  .terrain {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    contain: layout paint;
+  }
+  .terrain-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  .terrain-relief {
+    image-rendering: auto;
+  }
+  .terrain-fade-y {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 80%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 14%, #000 80%, transparent 100%);
+  }
+  .terrain-fade-top {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 22%);
+    mask-image: linear-gradient(180deg, transparent 0, #000 22%);
+  }
+  .terrain-fade-bottom {
+    -webkit-mask-image: linear-gradient(180deg, #000 70%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 70%, transparent 100%);
+  }
+  .terrain-fade-edges {
+    -webkit-mask-image: radial-gradient(120% 110% at 50% 50%, #000 55%, transparent 100%);
+    mask-image: radial-gradient(120% 110% at 50% 50%, #000 55%, transparent 100%);
+  }
+  .map-label text {
+    font-kerning: normal;
+  }
+  .specimen {
+    display: block;
+  }
+}

@@ -1,0 +1,140 @@
+/* ==========================================================================
+   Shell: page stack, frames, tab bar + scrim, edge swipe.
+   ========================================================================== */
+
+@layer components {
+
+
+.app {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.stack {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.stack:focus {
+  outline: none;
+}
+
+/* One frame per page. Grain is baked into the frame background (a small
+   tile painted once), not a blended overlay. */
+.frame {
+  --dim: 0;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-color: var(--bg);
+  background-image: var(--grain);
+  background-size: 160px 160px;
+  box-shadow: -1px 0 0 var(--line), -16px 0 40px rgba(0, 0, 0, 0.14);
+  will-change: transform;
+}
+.frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background: #000;
+  opacity: calc(var(--dim) * var(--dim-max, 0.1));
+}
+[data-theme='dark'] .frame::after,
+[data-theme='night'] .frame::after {
+  --dim-max: 0.35;
+}
+
+.edge-swipe {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 22px;
+  z-index: 70;
+  touch-action: none;
+}
+
+/* ---------- Tab bar ------------------------------------------------------ */
+.tab-scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--tabbar-h) + var(--tabbar-bottom) + 56px);
+  z-index: 90;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent) 0%, color-mix(in srgb, var(--bg) 78%, transparent) 42%, var(--bg) 78%);
+}
+
+.tabbar {
+  position: absolute;
+  z-index: 100;
+  left: max(14px, calc(var(--sal) + 10px));
+  right: max(14px, calc(var(--sar) + 10px));
+  bottom: var(--tabbar-bottom);
+  height: var(--tabbar-h);
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 4px;
+  border-radius: var(--r-tabbar);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  box-shadow: var(--shadow-float);
+}
+[data-theme='night'] .tabbar {
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  color: var(--text-2);
+  font: 600 10.5px/1 var(--font-sans);
+  letter-spacing: 0.005em;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  transition: color 0.2s var(--ease-out);
+}
+.tab[data-on] {
+  color: var(--text);
+}
+.tab:active .tab-icon {
+  opacity: 0.6;
+}
+.tab-lens {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-lens);
+  background: var(--fill-2);
+  box-shadow: 0 0 0 0.5px var(--line) inset;
+}
+.tab-icon,
+.tab-label {
+  position: relative;
+  white-space: nowrap;
+}
+.tab-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tab:focus-visible {
+  outline-offset: -2px;
+  border-radius: var(--r-lens);
+}
+
+} /* @layer components */

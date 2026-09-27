@@ -77,9 +77,16 @@ for (const r of routes) {
   });
   if (broken.length) { failures++; console.log('BROKEN IMAGES', r, broken); }
 }
-// Data files fetched at runtime must be cached too.
-const topo = await page.evaluate(async () => { try { return (await fetch('img/topo/route.json')).ok; } catch { return false; } });
-if (!topo) { failures++; console.log('TOPO DATA NOT CACHED'); }
+// The terrain rasters (SVG <image>, not <img>) must be cached too, every theme.
+const relief = await page.evaluate(async () => {
+  const bad = [];
+  for (const r of ['route', 'eastside']) for (const t of ['light', 'dark', 'night']) {
+    const u = `img/topo/relief-${r}-${t}.webp`;
+    try { if (!(await fetch(u)).ok) bad.push(u); } catch { bad.push(u); }
+  }
+  return bad;
+});
+if (relief.length) { failures++; console.log('RELIEF NOT CACHED', relief); }
 
 // Offline persistence: a hunt find survives a reload.
 await page.goto(base + '#/kids/hunt');

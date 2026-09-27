@@ -11,21 +11,26 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#f6f1e7" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#121110" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f4eee5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e0a07" media="(prefers-color-scheme: dark)" />
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <title>Fall Trip</title>
     <script>
-      // Resolve the theme before first paint (no flash). Mirrors src/lib/theme.ts.
+      // Resolve the theme before first paint (no flash). Mirrors src/lib/theme.ts:
+      // night vision wins; then the Light/Dark override; then the device.
       (function () {
+        var C = { light: '#f4eee5', dark: '#0e0a07', night: '#050202' };
+        var d = document.documentElement, t = 'light', pref = 'auto';
         try {
-          var t = JSON.parse(localStorage.getItem('falltrip:theme') || '"auto"');
-          if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-          document.documentElement.dataset.theme = t;
-        } catch (e) {
-          document.documentElement.dataset.theme = 'light';
-        }
+          pref = JSON.parse(localStorage.getItem('falltrip:theme') || '"auto"');
+          var nv = JSON.parse(localStorage.getItem('falltrip:nightVision') || 'false');
+          t = nv === true ? 'night' : pref === 'light' || pref === 'dark' ? pref : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        } catch (e) {}
+        d.dataset.theme = t;
+        d.style.colorScheme = t === 'light' ? 'light' : 'dark';
+        if (t === 'night' || pref === 'light' || pref === 'dark')
+          document.querySelectorAll('meta[name="theme-color"]').forEach(function (m) { m.content = C[t]; });
       })();
     </script>
   </head>
