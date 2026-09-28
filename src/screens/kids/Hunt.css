@@ -1,0 +1,394 @@
+/* Leaf hunt. Tokens only: every color here follows light, dark and night. */
+@layer components {
+  .hunt-top {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 18px;
+    padding: 0 max(var(--gutter), var(--sar)) 0 max(var(--gutter), var(--sal));
+  }
+
+  /* ---------- Progress --------------------------------------------------- */
+  .hunt-progress {
+    padding: 14px 18px 16px;
+  }
+  .hunt-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hunt-count {
+    flex: none;
+    font-family: var(--font-sans);
+    font-weight: 650;
+    font-size: calc(46rem / 17);
+    line-height: 1;
+    letter-spacing: -0.045em;
+    color: var(--text);
+    font-variant-numeric: tabular-nums lining-nums;
+    transition: color 0.3s;
+  }
+  .hunt-progress-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .hunt-of {
+    font: 600 calc(16.5rem / 17) / 1.2 var(--font-sans);
+    letter-spacing: -0.012em;
+    color: var(--text);
+  }
+  .hunt-left {
+    font: 500 calc(13rem / 17) / 1.3 var(--font-sans);
+    color: var(--text-3);
+  }
+  .hunt-pips {
+    margin-top: 12px;
+  }
+  @media (min-width: 700px) {
+    .hunt-progress {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 16px 24px;
+    }
+    .hunt-pips {
+      flex: 0 1 440px;
+      margin-top: 0;
+    }
+    .hunt-pips .pips {
+      max-width: none;
+    }
+  }
+  .hunt-pips .pips {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 380px;
+  }
+
+  /* ---------- Grid ------------------------------------------------------- */
+  .hunt-section {
+    margin-top: 22px;
+  }
+  /* 3 columns on iPhone, 4 on iPad, 5 on wide screens. Each column is at
+     least 6.3rem, so large Dynamic Type drops to 2 columns instead of
+     breaking words. */
+  .hunt-grid {
+    --min: 6.3rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(max(var(--min), calc((100% - 2 * 10px) / 3 - 0.5px)), 1fr));
+    grid-auto-rows: 1fr;
+    gap: 10px;
+    margin: 0;
+    padding: 0 max(var(--gutter), var(--sar)) 0 max(var(--gutter), var(--sal));
+    list-style: none;
+  }
+  @media (min-width: 700px) {
+    .hunt-grid {
+      grid-template-columns: repeat(auto-fill, minmax(max(var(--min), calc((100% - 3 * 14px) / 4 - 0.5px)), 1fr));
+      gap: 14px;
+    }
+  }
+  @media (min-width: 1000px) {
+    .hunt-grid {
+      grid-template-columns: repeat(auto-fill, minmax(max(var(--min), calc((100% - 4 * 14px) / 5 - 0.5px)), 1fr));
+    }
+  }
+  .hunt-li {
+    display: flex;
+    min-width: 0;
+  }
+  .hunt-cell {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* ---------- Tile ------------------------------------------------------- */
+  .hunt-tile {
+    position: relative;
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    border-radius: 20px;
+    background: var(--bg-2);
+    box-shadow: var(--shadow-card);
+    color: var(--text);
+    text-align: center;
+    cursor: pointer;
+    overflow: hidden;
+    isolation: isolate;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    transition: box-shadow 0.35s var(--ease-out);
+  }
+  .hunt-tile::after {
+    /* pressed fill, like every tappable surface */
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: inherit;
+    background: var(--fill);
+    opacity: 0;
+    transition: opacity 0.18s;
+    pointer-events: none;
+  }
+  .hunt-tile[data-pressed]::after {
+    opacity: 1;
+    transition-duration: 0s;
+  }
+  .hunt-tile[data-found] {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--kid) 30%, transparent),
+      0 1px 2px rgba(90, 50, 15, 0.06),
+      5px 12px 26px -12px color-mix(in srgb, var(--kid) 42%, transparent);
+  }
+  [data-theme='dark'] .hunt-tile[data-found] {
+    box-shadow:
+      0 1px 0 var(--hi) inset,
+      0 0 0 1px color-mix(in srgb, var(--kid) 34%, transparent),
+      0 16px 34px -22px color-mix(in srgb, var(--kid) 60%, transparent);
+  }
+  [data-theme='dark'][data-after-dark] .hunt-tile[data-found],
+  [data-theme='night'] .hunt-tile[data-found] {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--kid) 40%, transparent);
+  }
+
+  .hunt-layer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    padding: 14px 8px 12px;
+    border-radius: inherit;
+  }
+  .hunt-base {
+    position: relative;
+  }
+  .hunt-flood {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(110% 80% at 22% 14%, color-mix(in srgb, var(--kid) 20%, transparent), transparent 68%),
+      color-mix(in srgb, var(--kid) 11%, var(--bg-2));
+    box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--kid) 40%, transparent) inset;
+    will-change: clip-path;
+  }
+  [data-theme='dark'] .hunt-flood {
+    background:
+      radial-gradient(110% 80% at 22% 14%, color-mix(in srgb, var(--kid) 17%, transparent), transparent 70%),
+      color-mix(in srgb, var(--kid) 8%, var(--bg-2));
+  }
+  [data-theme='night'] .hunt-flood {
+    background: color-mix(in srgb, var(--kid) 10%, var(--bg-2));
+  }
+
+  .hunt-art {
+    /* grows with the row; the drawing stays centered in the space */
+    display: block;
+    flex: 1 0 auto;
+    width: min(76%, 104px);
+    aspect-ratio: 1;
+    margin: 0 auto 6px;
+  }
+  /* Oversized: the drawing is sized from the tile's height (container
+     units) and hangs off the top-right corner, blade just above the label. */
+  .hunt-bigwrap {
+    position: absolute;
+    inset: 0;
+    container-type: size;
+    pointer-events: none;
+  }
+  .hunt-big {
+    position: absolute;
+    top: -49cqh;
+    right: calc(125cqh * -0.38);
+    width: 125cqh;
+    height: 125cqh;
+    transform-origin: 30% 80%;
+  }
+  .hunt-tile[data-hunt-item='big'] .hunt-label {
+    /* a halo in the tile color keeps the label readable over the leaf */
+    text-shadow: 0 0 3px var(--bg-2), 0 0 8px var(--bg-2), 0 0 14px var(--bg-2);
+  }
+  .hunt-label {
+    position: relative;
+    margin-top: auto;
+    max-width: 100%;
+    font: 600 calc(14.5rem / 17) / 1.18 var(--font-sans);
+    letter-spacing: -0.012em;
+    color: var(--text-2);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  }
+  .hunt-flood .hunt-label {
+    color: var(--text);
+  }
+
+  /* Check badge: the kid's fill and numeral ink (outlined at night). */
+  .hunt-check {
+    position: absolute;
+    z-index: 2;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    padding: 1px;
+    border-radius: 50%;
+    background: var(--kid-fill);
+    color: var(--kid-ink);
+    box-shadow: 0 0 0 1.5px var(--kid) inset, 0 2px 6px -2px color-mix(in srgb, var(--kid) 70%, transparent);
+    pointer-events: none;
+  }
+  [data-theme='night'] .hunt-check {
+    box-shadow: 0 0 0 1.5px var(--kid) inset;
+  }
+
+  /* Hint: a quiet light bulb in the corner, 44 pt hit area. */
+  .hunt-hint {
+    position: absolute;
+    z-index: 4;
+    top: 7px;
+    left: 7px;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-3);
+    cursor: pointer;
+    transition: background-color 0.18s, color 0.18s;
+  }
+  .hunt-hint::before {
+    content: '';
+    position: absolute;
+    inset: -9px;
+  }
+  .hunt-hint:active {
+    background: var(--fill-3);
+    color: var(--text);
+  }
+
+  /* ---------- Sheets ----------------------------------------------------- */
+  .hunt-hint-art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    height: 168px;
+    margin-bottom: 16px;
+    border-radius: var(--r-card);
+    background:
+      radial-gradient(70% 90% at 50% 40%, color-mix(in srgb, var(--kid) 12%, transparent), transparent 70%),
+      var(--bg-3);
+    overflow: hidden;
+  }
+  .hunt-hint-svg {
+    width: 132px;
+    height: 132px;
+  }
+  .hunt-hint-svg-big {
+    width: 196px;
+    height: 196px;
+    transform: translate(16%, -12%);
+  }
+  .hunt-hint-found {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px 4px 8px;
+    border-radius: 999px;
+    background: var(--bg-2);
+    color: var(--text-2);
+    box-shadow: var(--shadow-raised);
+  }
+  .hunt-how {
+    margin: 0;
+    padding: 0 0 8px;
+    list-style: none;
+    counter-reset: how;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .hunt-how li {
+    counter-increment: how;
+    position: relative;
+    padding-left: 38px;
+    font: 400 calc(16rem / 17) / 1.45 var(--font-sans);
+    color: var(--text-2);
+  }
+  .hunt-how li b {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .hunt-how li::before {
+    content: counter(how);
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--fill-2);
+    color: var(--text);
+    font: 600 calc(13rem / 17) / 1 var(--font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+  .hunt-trophy {
+    /* six to a row, the last row centered */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    margin: 0 0 8px;
+    padding: 12px 10px;
+    list-style: none;
+    border-radius: var(--r-card);
+    background: var(--bg-3);
+  }
+  .hunt-trophy li {
+    width: calc((100% - 5 * 6px) / 6);
+    max-width: 72px;
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+
+  /* ---------- Effects layer (particles, leaf fall) ------------------------ */
+  .hunt-fx {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    pointer-events: none;
+    overflow: hidden;
+    contain: strict;
+  }
+  .hunt-fx-p {
+    position: absolute;
+    left: 0;
+    top: 0;
+    opacity: 0;
+    will-change: transform, opacity;
+    overflow: visible;
+  }
+}
