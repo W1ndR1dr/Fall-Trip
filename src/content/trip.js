@@ -9,7 +9,7 @@ export const HOME_BY = '2026-10-11T18:30:00-07:00';
 export const sun = {
   // USNO (Mammoth/Lee Vining), golden hour computed. PDT.
   fri: { date: 'Fri Oct 9', sunrise: '6:59', sunset: '6:27', goldenAM: '6:59–7:34', goldenPM: '5:51–6:27', dark: '7:53', moon: 'Waning crescent, 1% (sets 5:48 pm)' },
-  sat: { date: 'Sat Oct 10', sunrise: '7:00', sunset: '6:25', goldenAM: '7:00–7:34', goldenPM: '5:50–6:25', dark: '7:52', moon: 'NEW MOON (8:50 am). Darkest night of the month!' },
+  sat: { date: 'Sat Oct 10', sunrise: '7:00', sunset: '6:25', goldenAM: '7:00–7:34', goldenPM: '5:50–6:25', dark: '7:52', moon: 'New Moon (8:50 am). The darkest night of the month.' },
   sun: { date: 'Sun Oct 11', sunrise: '7:01', sunset: '6:24', goldenAM: '7:01–7:35', goldenPM: '5:49–6:24', dark: '7:51', moon: 'Waxing crescent, 2% (sets 6:42 pm)' },
 };
 
@@ -91,7 +91,7 @@ export const routes = {
     summary: 'Same road as Friday, now in morning light. Gentler curves than Sonora Pass.',
     legs: [
       ['9:30', 'Leave Mammoth (optional June Lake Loop detour, +10 min)'],
-      ['10:20', 'Lee Vining: GAS UP (last gas for 59 mi). Whoa Nellie if open'],
+      ['10:20', 'Lee Vining: gas up (last gas for 59 mi). Whoa Nellie if open'],
       ['11:00', 'Tioga Pass. Ellery and Tioga lakes in morning light'],
       ['11:20', 'Optional: Soda Springs and Parsons Lodge walk (1.4 mi RT, flat; use the posted detour)'],
       ['12:00', 'Tenaya Lake picnic lunch'],
