@@ -1,7 +1,8 @@
 import { MapLabel, StopDot, Terrain, cropAround } from '@/art';
+import { motion } from 'motion/react';
 import { useChecklist } from '@/lib/store';
 import { haptic } from '@/lib/feedback';
-import { IconButton } from '@/ui';
+import { IconButton, spring, useCalm } from '@/ui';
 import { Star } from '@/ui/icons';
 import { colorReport } from '@/content/trip.js';
 import { ENERGY, placeOf, spanFor } from './data';
@@ -36,7 +37,15 @@ export function Effort({ n }: { n: number }) {
 export function StarButton({ id, name, size = 'md' }: { id: string; name: string; size?: 'sm' | 'md' }) {
   const maybes = useChecklist('maybes');
   const on = maybes.has(id);
+  const calm = useCalm();
   return (
+    <motion.span
+      className="ac-star-wrap"
+      key={on ? 'on' : 'off'}
+      initial={calm || !on ? false : { scale: 0.6, rotate: -25 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={spring.bounce}
+    >
     <IconButton
       icon={Star}
       weight={on ? 'fill' : 'regular'}
@@ -50,6 +59,7 @@ export function StarButton({ id, name, size = 'md' }: { id: string; name: string
         haptic();
       }}
     />
+    </motion.span>
   );
 }
 

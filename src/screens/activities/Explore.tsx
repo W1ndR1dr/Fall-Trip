@@ -1,7 +1,8 @@
+import { AnimatePresence, LayoutGroup, motion } from 'motion/react';
 import type { ScreenProps } from '@/app/routes';
 import { useChecklist, useStored } from '@/lib/store';
 import { areas, colorReport } from '@/content/trip.js';
-import { Card, Chip, EmptyState, Page, Pressable, Section, navigate } from '@/ui';
+import { Card, Chip, EmptyState, Page, Pressable, Section, fadeUp, navigate, spring, stagger, useCalm, useFirstVisit } from '@/ui';
 import { CaretRight, Coffee, Clock, Star } from '@/ui/icons';
 import { ACTIVITIES, AREA_KEYS, FILTERS, FILTER_KEYS, isFood, matches, type Activity, type FilterKey } from './data';
 import { Effort, PlaceThumb, Spectrum, StarButton } from './parts';
@@ -16,6 +17,8 @@ export default function Explore({ params }: ScreenProps) {
   const list = ACTIVITIES.filter((a) => matches(a, f, maybes.has));
   const groups = AREA_KEYS.map((k) => ({ k, items: list.filter((a) => a.area === k) })).filter((g) => g.items.length);
 
+  const first = useFirstVisit('explore');
+  const calm = useCalm();
   const pick = (k: FilterKey) => {
     setSaved(k);
     navigate(k === 'all' ? '/explore' : `/explore/${k}`, { replace: true });
@@ -50,21 +53,42 @@ export default function Explore({ params }: ScreenProps) {
         </div>
       )}
 
-      {groups.length ? (
-        groups.map((g) => (
-          <Section key={g.k} title={areas[g.k].name} note={areas[g.k].drive}>
-            <div className="ac-grid">
-              {g.items.map((a) => (
-                <ActivityCard key={a.id} a={a} />
-              ))}
-            </div>
-          </Section>
-        ))
-      ) : (
-        <EmptyState icon={Star} title="Nothing starred yet">
-          Tap the star on anything that sounds good. Starred things show up here.
-        </EmptyState>
-      )}
+      <LayoutGroup>
+        <motion.div initial={first ? 'hidden' : false} animate="show" variants={stagger(groups.length)}>
+          <AnimatePresence mode="popLayout" initial={false}>
+            {groups.length ? (
+              groups.map((g) => (
+                <motion.div key={g.k} layout={!calm} variants={fadeUp} exit={{ opacity: 0 }} transition={spring.glide}>
+                  <Section title={areas[g.k].name} note={areas[g.k].drive}>
+                    <div className="ac-grid">
+                      <AnimatePresence mode="popLayout" initial={false}>
+                        {g.items.map((a) => (
+                          <motion.div
+                            key={a.id}
+                            layout={!calm}
+                            initial={calm ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 8 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={calm ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
+                            transition={spring.glide}
+                          >
+                            <ActivityCard a={a} />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  </Section>
+                </motion.div>
+              ))
+            ) : (
+              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <EmptyState icon={Star} title="Nothing starred yet">
+                  Tap the star on anything that sounds good. Starred things show up here.
+                </EmptyState>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </LayoutGroup>
     </Page>
   );
 }
