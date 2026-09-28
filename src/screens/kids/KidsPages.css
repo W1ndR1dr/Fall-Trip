@@ -1,0 +1,366 @@
+@layer components {
+  .kb-dim {
+    color: var(--text-2);
+  }
+  .kb-foot {
+    margin-top: 18px;
+  }
+  .kb-lede {
+    margin: 4px 0 6px;
+  }
+  .kb-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 0 16px;
+  }
+  @media (min-width: 700px) {
+    .kb-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+  }
+
+  /* Tally */
+  .kb-tally {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .kb-tally-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .kb-tally-num {
+    font: 400 2.4rem/1 var(--font-serif);
+    font-variation-settings: 'opsz' 60;
+    letter-spacing: -0.03em;
+  }
+
+  /* Find cards (tracks, sky) */
+  .kb-find {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    transition: box-shadow 0.25s;
+  }
+  .kb-find.is-on {
+    box-shadow: inset 0 0 0 1.5px var(--accent-line, var(--line-2));
+  }
+  .kb-find-art {
+    flex: none;
+  }
+  .kb-find-body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+  }
+  .kb-find-title {
+    margin: 0;
+  }
+  .kb-find-check {
+    flex: none;
+    margin: -4px -4px 0 0;
+  }
+
+  /* Track glyph on a mud tile */
+  .kb-mud {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--bg-2) 30%, transparent), transparent 60%),
+      color-mix(in srgb, #8a6a4a 22%, var(--bg-3));
+    box-shadow: inset 0 1px 2px color-mix(in srgb, #000 12%, transparent), inset 0 0 0 1px var(--line);
+    color: color-mix(in srgb, #3a2616 78%, var(--text));
+  }
+  [data-theme='dark'] .kb-mud,
+  [data-theme='night'] .kb-mud {
+    color: var(--text-2);
+  }
+  .kb-track {
+    width: 54px;
+    height: 54px;
+  }
+
+  /* Rocks */
+  .kb-rock {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .kb-rock-art {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    border-radius: 16px;
+    background: var(--bg-3);
+    overflow: hidden;
+  }
+  .kb-rock-art > svg {
+    width: 76px;
+    height: 76px;
+  }
+  .kb-rock-map {
+    border-radius: 16px;
+  }
+  .kb-rock-body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+  .kb-where {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-2);
+  }
+
+  /* Sky chart */
+  .kb-chart-card {
+    display: flex;
+    justify-content: center;
+  }
+  .kb-chart {
+    margin: 0;
+    width: 100%;
+    max-width: 440px;
+  }
+  .kb-chart > svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .kb-chart figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    text-align: center;
+  }
+  .kb-dome {
+    fill: #10132a;
+    stroke: var(--line-2);
+    stroke-width: 1;
+  }
+  [data-theme='night'] .kb-dome {
+    fill: #0a0302;
+  }
+  .kb-ring {
+    fill: none;
+    stroke: rgba(200, 210, 255, 0.1);
+    stroke-dasharray: 2 4;
+  }
+  .kb-milky {
+    fill: none;
+    stroke: rgba(210, 215, 255, 0.13);
+    stroke-width: 26;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    filter: blur(3px);
+  }
+  .kb-faint {
+    fill: rgba(235, 238, 255, 0.55);
+  }
+  .kb-star {
+    fill: #f4f1ff;
+  }
+  .kb-planet {
+    fill: #f2cf86;
+  }
+  .kb-figure {
+    fill: none;
+    stroke: rgba(242, 207, 134, 0.55);
+    stroke-width: 1.1;
+    stroke-linejoin: round;
+  }
+  .kb-label {
+    font: 600 10.5px/1 var(--font-sans);
+    fill: #eef0ff;
+  }
+  .kb-label-dim {
+    font-weight: 500;
+    fill: rgba(242, 207, 134, 0.95);
+  }
+  .kb-label-milky {
+    font-style: italic;
+    font-weight: 500;
+    fill: rgba(220, 225, 255, 0.7);
+  }
+  .kb-compass {
+    font: 700 11px/1 var(--font-sans);
+    fill: var(--text-2);
+  }
+  [data-theme='night'] .kb-star,
+  [data-theme='night'] .kb-faint,
+  [data-theme='night'] .kb-label {
+    fill: #d8563a;
+  }
+  [data-theme='night'] .kb-planet,
+  [data-theme='night'] .kb-label-dim,
+  [data-theme='night'] .kb-label-milky {
+    fill: #b8452c;
+  }
+  [data-theme='night'] .kb-figure {
+    stroke: rgba(216, 86, 58, 0.5);
+  }
+  [data-theme='night'] .kb-milky {
+    stroke: rgba(216, 86, 58, 0.12);
+  }
+  .kb-tips {
+    margin: 0;
+    padding-left: 1.1em;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .kb-actions {
+    margin-top: 18px;
+  }
+
+  /* Games */
+  .kb-game {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 44px;
+  }
+  .kb-game-n {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    font: 400 1.5rem/1 var(--font-serif);
+    color: var(--text-3);
+  }
+  .kb-trivia {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 116px;
+    text-align: left;
+    cursor: pointer;
+  }
+  .kb-trivia-q {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .kb-trivia-q svg {
+    flex: none;
+    margin-top: 3px;
+    color: var(--text-3);
+  }
+  .kb-trivia-hint {
+    color: var(--text-3);
+  }
+  .kb-trivia-a {
+    font-size: 1.12rem;
+    line-height: 1.4;
+    color: var(--text);
+  }
+  .kb-trivia.is-open {
+    box-shadow: inset 0 0 0 1.5px var(--line-2);
+  }
+
+  /* Draw */
+  .kb-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .kb-prompt-stage {
+    position: relative;
+    width: 100%;
+    min-height: 7.2em;
+  }
+  .kb-prompt-text {
+    margin: 0;
+    font: 400 1.55rem/1.3 var(--font-serif);
+    font-variation-settings: 'opsz' 36;
+    letter-spacing: -0.012em;
+    text-wrap: pretty;
+  }
+  .kb-steps-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .kb-steps-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .kb-steps-leaf {
+    display: inline-block;
+    width: 34px;
+    height: 34px;
+  }
+  .kb-steps {
+    margin: 0;
+    padding-left: 1.3em;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  /* Cozy */
+  .kb-recipe {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .kb-recipe-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .kb-recipe-head svg {
+    flex: none;
+    color: var(--text-2);
+  }
+  .kb-ingredients {
+    margin: 0 0 4px;
+    padding-left: 1.1em;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .kb-note {
+    margin: 2px 0 0;
+  }
+  .kb-books {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .kb-books li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .kb-books svg {
+    flex: none;
+    margin-top: 3px;
+    color: var(--text-3);
+  }
+  .kb-book-why {
+    display: block;
+    margin-top: 2px;
+  }
+}
