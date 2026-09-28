@@ -1,0 +1,1059 @@
+/* ==========================================================================
+   Today ("/"). Tokens only: night vision recolors everything.
+   Class prefix: td-
+   ========================================================================== */
+
+/* Today ships in the shell bundle, and this file can land ahead of
+   index.css; declare Tailwind's layer order first so `components` never
+   ends up below `base`. */
+@layer properties, theme, base, components, utilities;
+
+@layer components {
+
+/* ---------- local tokens ------------------------------------------------ */
+.page {
+  --td-sun: var(--accent);
+  --td-dusk-hi: var(--night);
+  --td-dusk-lo: var(--accent-2);
+  --td-nightsky: color-mix(in srgb, var(--night) 42%, var(--text));
+  --td-star: var(--bg-2);
+}
+[data-theme='dark'] .page {
+  --td-nightsky: color-mix(in srgb, var(--night) 16%, var(--bg));
+  --td-star: var(--text);
+}
+[data-theme='night'] .page {
+  --td-nightsky: var(--bg);
+  --td-star: var(--text-3);
+  --td-dusk-hi: var(--bg);
+}
+
+.td-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 6px;
+  font-family: var(--font-serif);
+  font-size: calc(20rem / 17);
+  font-weight: 460;
+  letter-spacing: -0.012em;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+/* ---------- Countdown hero ---------------------------------------------- */
+.td-hero {
+  position: relative;
+  padding: 10px calc(var(--gutter-text) + var(--sar)) 0 calc(var(--gutter-text) + var(--sal));
+}
+.td-hero-eyebrow {
+  color: var(--text-2);
+}
+.td-hero-figure {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  column-gap: 14px;
+  row-gap: 6px;
+  margin-top: 10px;
+}
+.td-hero-num {
+  position: relative;
+  display: inline-block;
+  margin-left: -0.04em;
+}
+/* The number: ink to ember in light, cream to amber in dark (the sun on the
+   horizon), plain ink in night vision. Each digit carries the gradient, so
+   rolling digits keep it. */
+.td-hero-num .roller-digit {
+  background: linear-gradient(180deg, var(--text) 18%, var(--accent-text) 96%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding: 0.04em 0.02em 0.1em;
+  margin: -0.04em -0.02em -0.1em;
+}
+[data-theme='dark'] .td-hero-num .roller-digit {
+  background-image: linear-gradient(180deg, var(--text) 8%, var(--accent) 88%);
+}
+[data-theme='night'] .td-hero-num .roller-digit {
+  background: none;
+  color: var(--text);
+}
+/* Glow: dark mode only, and out after dark. */
+[data-theme='dark'] .td-hero-num {
+  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--accent-2) 30%, transparent)) drop-shadow(0 0 44px color-mix(in srgb, var(--accent-2) 12%, transparent));
+}
+[data-theme='dark'][data-after-dark] .td-hero-num {
+  filter: none;
+}
+.td-hero-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 0.2em;
+}
+.td-hero-units {
+  color: var(--text);
+}
+.td-hero-hm {
+  font: 500 calc(17rem / 17) / 1.2 var(--font-sans);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.td-hero-hm b {
+  color: var(--text);
+  font-weight: 650;
+}
+.td-hero-until {
+  margin-top: 16px;
+  color: var(--text-2);
+  font-size: calc(17rem / 17);
+}
+.td-hero-until b {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Day strip: today → the trip */
+.td-strip {
+  margin: 18px calc(var(--gutter-text) + var(--sar)) 0 calc(var(--gutter-text) + var(--sal));
+}
+.td-strip-pills {
+  display: flex;
+  gap: 3px;
+}
+.td-pill {
+  flex: 1 1 0;
+  min-width: 3px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--fill-3);
+}
+.td-pill-today {
+  background: var(--text);
+}
+.td-pill-trip {
+  flex-grow: 1.6;
+  background: var(--accent-mark);
+}
+.td-strip-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 7px;
+}
+.td-strip-labels > :first-child {
+  color: var(--text-2);
+}
+.td-strip-gap {
+  color: var(--text-3);
+}
+.td-strip-trip {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+/* ---------- Names nudge ------------------------------------------------- */
+.td-names.surface {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  column-gap: 12px;
+  row-gap: 10px;
+}
+.td-names-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--r-well);
+  background: var(--fill-2);
+  color: var(--text-2);
+}
+.td-names-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 1px;
+}
+.td-names-btn.btn {
+  grid-column: 2;
+  justify-self: start;
+}
+
+/* ---------- Bento ------------------------------------------------------- */
+.td-bento {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    'plan hunt'
+    'plan dev'
+    'color act'
+    'pack before'
+    'sky sky';
+  gap: 10px;
+  margin: 0 max(var(--gutter), var(--sar)) 0 max(var(--gutter), var(--sal));
+}
+@media (min-width: 640px) {
+  .td-bento {
+    grid-template-columns: 1.15fr 1fr 1fr;
+    grid-template-areas:
+      'plan hunt dev'
+      'plan color act'
+      'pack before sky';
+  }
+  .td-tile-sky .td-sky-line {
+    flex-basis: 100%;
+  }
+}
+.td-tile-wrap {
+  display: flex;
+  min-width: 0;
+}
+.td-tile.surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 112px;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+.td-tile-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.td-tile-head {
+  gap: 7px;
+}
+.td-tile-icon {
+  flex: none;
+  color: var(--text-3);
+}
+.td-tile-icon-night {
+  color: var(--night);
+}
+.td-tile-title {
+  min-width: 0;
+  font-size: calc(15rem / 17);
+  line-height: 1.2;
+}
+.td-tile-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: auto;
+  min-width: 0;
+}
+.td-tile-foot .t-footnote b {
+  color: var(--text);
+  font-weight: 650;
+}
+.td-big {
+  font: 650 calc(26rem / 17) / 1 var(--font-sans);
+  letter-spacing: -0.025em;
+  color: var(--text);
+}
+
+/* Plan: the three day titles */
+.td-plan-sub {
+  margin-top: -4px;
+}
+.td-plan-days {
+  display: flex;
+  flex-direction: column;
+  margin-top: auto;
+}
+.td-plan-day {
+  display: grid;
+  grid-template-columns: 2.3em 1fr;
+  gap: 2px;
+  padding: 8px 0 7px;
+  border-top: 1px solid var(--line);
+  font: 500 calc(13rem / 17) / 1.3 var(--font-sans);
+  color: var(--text-2);
+}
+.td-plan-dow {
+  font-weight: 650;
+  color: var(--text);
+}
+.td-plan-day:last-child {
+  padding-bottom: 0;
+}
+
+/* Leaf hunt: a gold aspen leaf, oversized, bleeding off the tile */
+.td-tile-hunt .td-tile-title {
+  position: relative;
+  z-index: 1;
+}
+.td-hunt-art {
+  position: absolute;
+  right: -22px;
+  top: -12px;
+  width: 104px;
+  height: 104px;
+  transform: rotate(-8deg);
+  opacity: 0.95;
+  pointer-events: none;
+}
+.td-tile-hunt .td-tile-foot {
+  position: relative;
+  z-index: 1;
+}
+
+.td-dev-title {
+  font: 450 calc(18rem / 17) / 1.15 var(--font-serif);
+  letter-spacing: -0.012em;
+  color: var(--text);
+}
+
+/* Color report: the fall spectrum with a marker */
+.td-spectrum {
+  position: relative;
+  display: flex;
+  gap: 3px;
+  height: 8px;
+  margin: 4px 0 6px;
+}
+.td-spec {
+  flex: 1;
+  border-radius: 3px;
+}
+.td-spec-0 {
+  background: var(--pig-green);
+}
+.td-spec-1 {
+  background: color-mix(in srgb, var(--pig-green) 45%, var(--pig-gold));
+}
+.td-spec-2 {
+  background: var(--pig-gold);
+}
+.td-spec-3 {
+  background: color-mix(in srgb, var(--pig-gold) 40%, var(--pig-red));
+}
+.td-spec-4 {
+  background: color-mix(in srgb, var(--pig-red) 55%, var(--text-3));
+}
+.td-spec-mark {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--text);
+  box-shadow: 0 0 0 2px var(--bg-2);
+}
+.td-color-line b {
+  color: var(--text);
+}
+
+/* Packing meter */
+.td-meter {
+  display: block;
+  height: 4px;
+  margin-top: 5px;
+  border-radius: 2px;
+  background: var(--fill-2);
+  overflow: hidden;
+}
+.td-meter > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--text-2);
+  transform-origin: 0 50%;
+}
+
+.td-tile-sky.surface {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  min-height: 0;
+  column-gap: 12px;
+}
+.td-sky-line {
+  flex: 1 1 auto;
+  color: var(--text-2);
+}
+.td-sky-chev {
+  flex: none;
+  color: var(--text-3);
+}
+@media (min-width: 640px) {
+  .td-tile-sky .td-sky-chev {
+    display: none;
+  }
+}
+
+/* ---------- The drive (route story) ------------------------------------- */
+.td-drive {
+  margin-top: 36px;
+}
+.td-drive .section-head {
+  margin-bottom: 0;
+}
+.td-story-wait {
+  height: 100vh;
+}
+.td-story {
+  position: relative;
+}
+.td-story-stage {
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+}
+.td-story-map {
+  position: absolute;
+  inset: 0;
+}
+.td-story-map .terrain.td-story-terrain {
+  position: absolute;
+  inset: 0;
+}
+/* The relief (only) feathers in under the nav bar. */
+.td-story-terrain > .terrain-layer:first-child {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 18%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 18%);
+}
+.td-story-scrim {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--bg) 0%, transparent) 0, var(--bg) 64px);
+}
+.td-stars {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 58%;
+  pointer-events: none;
+}
+
+.td-story-bottom {
+  position: absolute;
+  left: max(var(--gutter), var(--sal));
+  right: max(var(--gutter), var(--sar));
+  bottom: calc(var(--tabbar-h) + var(--tabbar-bottom) + 14px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Elevation profile */
+.td-profile {
+  padding: 0 4px;
+}
+.td-profile-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.td-profile-label {
+  color: var(--text-2);
+  text-shadow: 0 0 6px var(--bg), 0 0 2px var(--bg);
+}
+.td-profile-feet {
+  font: 650 calc(13rem / 17) / 1 var(--font-sans);
+  color: var(--accent-text);
+  text-shadow: 0 0 6px var(--bg), 0 0 2px var(--bg);
+}
+.td-profile-plot {
+  position: relative;
+  height: 40px;
+}
+.td-profile-svg {
+  display: block;
+  width: 100%;
+  height: 40px;
+  overflow: visible;
+}
+.td-profile-dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  margin: -4.5px 0 0 -4.5px;
+  border-radius: 50%;
+  background: var(--accent-mark);
+  box-shadow: 0 0 0 2px var(--bg-2), var(--glow-mark);
+}
+.td-profile-tioga {
+  position: absolute;
+  top: 3px;
+  bottom: 0;
+  border-left: 1px dashed var(--line-2);
+}
+.td-profile-axis {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: var(--text-3);
+  text-shadow: 0 0 6px var(--bg), 0 0 2px var(--bg);
+}
+.td-profile-peak {
+  position: absolute;
+  top: -62px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* Chapter card: the strong material (no blur; blur is for the bars) */
+.td-chapter {
+  position: relative;
+  padding: 14px 16px 14px;
+  border-radius: var(--r-card);
+  background: var(--glass-strong);
+  box-shadow: var(--shadow-float);
+}
+.td-chapter-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.td-chapter-when {
+  color: var(--text-2);
+}
+.td-ticks {
+  display: flex;
+  gap: 4px;
+  flex: none;
+}
+.td-tick {
+  position: relative;
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--fill-3);
+}
+.td-tick[data-on] {
+  background: color-mix(in srgb, var(--accent-mark) 45%, transparent);
+}
+.td-tick-pill {
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background: var(--accent-mark);
+}
+.td-chapter-body {
+  position: relative;
+  margin-top: 6px;
+}
+.td-chapter-text {
+  flex: 1;
+  min-width: 0;
+}
+.td-chapter-title {
+  font: 450 calc(22rem / 17) / 1.15 var(--font-serif);
+  letter-spacing: -0.014em;
+  color: var(--text);
+}
+.td-chapter-copy {
+  margin-top: 4px;
+}
+.td-chapter-link {
+  margin-right: 52px !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 44px;
+  margin: 0 -6px -12px;
+  padding: 0 6px;
+  font: 600 calc(14rem / 17) / 1.2 var(--font-sans);
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 3px;
+}
+.td-chapter-next {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--fill-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.td-chapter-next[data-pressed] {
+  background: var(--fill-3);
+}
+
+/* ---------- During: header conditions ----------------------------------- */
+.td-cond {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 6px;
+  margin-top: 4px;
+  font: 500 calc(14rem / 17) / 1.3 var(--font-sans);
+  color: var(--text-2);
+}
+.td-cond-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.td-cond-item svg {
+  color: var(--text-3);
+}
+.td-cond-item b {
+  color: var(--text);
+  font-weight: 650;
+}
+.td-cond-soft {
+  color: var(--text-3);
+}
+.td-cond .td-ok {
+  color: var(--ok);
+}
+.td-cond .td-closed {
+  color: var(--danger);
+}
+
+/* ---------- Now card ----------------------------------------------------- */
+.td-now-slot {
+  margin-top: 18px;
+}
+.td-now-wrap {
+  margin: 0 max(var(--gutter), var(--sar)) 0 max(var(--gutter), var(--sal));
+}
+.td-now.surface {
+  margin: 0;
+  overflow: hidden;
+}
+.td-nowmap {
+  position: relative;
+  border-bottom: 1px solid var(--line);
+}
+.td-nowmap-empty {
+  background: var(--bg-3);
+}
+.td-now-body {
+  padding: 14px 16px 6px;
+}
+.td-now-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 6px;
+}
+.td-since {
+  color: var(--text-2);
+}
+.td-leave {
+  margin-left: auto;
+}
+.td-now-title {
+  margin-top: 10px;
+}
+.td-now-kicker {
+  margin-top: 3px;
+}
+.td-now-tag {
+  margin-top: 6px;
+}
+.td-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font: 500 calc(14rem / 17) / 1.35 var(--font-sans);
+  color: var(--text-2);
+}
+.td-facts li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.td-facts svg {
+  flex: none;
+  margin-top: 1px;
+  color: var(--text-3);
+}
+.td-now-text {
+  margin-top: 6px;
+}
+.td-now-progress {
+  margin-top: 16px;
+}
+.td-now-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.td-now-hint {
+  text-decoration: underline;
+  text-decoration-color: var(--line-2);
+  text-underline-offset: 3px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.td-devrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: var(--r-tile);
+  background: var(--fill);
+  box-shadow: 0 0 0 1px var(--line) inset;
+  text-align: left;
+}
+.td-devrow[data-pressed] {
+  background: var(--fill-2);
+}
+.td-devrow-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-well);
+  background: var(--night-soft);
+  color: var(--night);
+}
+.td-devrow-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.td-devrow-title {
+  font: 600 calc(15rem / 17) / 1.3 var(--font-sans);
+  color: var(--text);
+}
+.td-devrow-sub b {
+  font-weight: 650;
+}
+.td-chev {
+  flex: none;
+  color: var(--text-3);
+}
+
+.td-nextrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  margin: 12px -16px 0;
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+.td-nextrow[data-pressed] {
+  background: var(--fill);
+}
+.td-nextrow-k {
+  flex: none;
+}
+.td-nextrow-t {
+  flex: none;
+  font: 650 calc(16rem / 17) / 1.2 var(--font-sans);
+  color: var(--text);
+}
+.td-nextrow-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.td-nextrow-title {
+  font: 600 calc(15rem / 17) / 1.3 var(--font-sans);
+  color: var(--text);
+}
+.td-nextrow-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.td-nv {
+  margin-top: 14px;
+}
+
+/* ---------- Later today --------------------------------------------------- */
+.td-later {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding: 0;
+  list-style: none;
+}
+.td-later-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px 12px 16px;
+  min-height: 64px;
+}
+.td-later-row + .td-later-row {
+  border-top: 1px solid var(--line);
+}
+.td-later-time {
+  flex: none;
+  width: 4.6em;
+}
+.td-time {
+  font: 650 calc(16rem / 17) / 1.2 var(--font-sans);
+  color: var(--text);
+}
+.td-later-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.td-later-title {
+  font-size: calc(15.5rem / 17);
+}
+.td-later-sub {
+  color: var(--text-3);
+}
+.td-later-drive {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.td-later-drive svg {
+  display: inline-block;
+}
+.td-later-maps {
+  flex: none;
+}
+
+/* ---------- Sun arc ------------------------------------------------------- */
+.td-sun.surface {
+  padding-bottom: 14px;
+}
+.td-sun-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.td-sun-next {
+  color: var(--text-2);
+  text-align: right;
+}
+.td-sun-next-live {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.td-sun-plot {
+  margin: 8px -4px 0;
+}
+.td-sun-svg {
+  display: block;
+  overflow: visible;
+}
+.td-arc-night {
+  fill: none;
+  stroke: var(--night);
+  stroke-width: 1.7;
+  stroke-dasharray: 1.5 4;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+.td-arc-twilight {
+  fill: none;
+  stroke: var(--accent-2);
+  stroke-width: 1.8;
+  stroke-dasharray: 1.5 4;
+  stroke-linecap: round;
+}
+.td-arc-day {
+  fill: none;
+  stroke: var(--text-3);
+  stroke-width: 1.4;
+  opacity: 0.55;
+}
+.td-arc-golden {
+  fill: none;
+  stroke: var(--accent-mark);
+  stroke-width: 3.6;
+  stroke-linecap: round;
+}
+.td-arc-past {
+  fill: none;
+  stroke: var(--accent-mark);
+  stroke-width: 3.6;
+  stroke-linecap: round;
+}
+.td-arc-past-day {
+  stroke-width: 2;
+  opacity: 0.85;
+}
+.td-sun-halo {
+  opacity: 0.8;
+}
+[data-theme='light'] .td-sun-halo {
+  opacity: 0.45;
+}
+[data-after-dark] .td-sun-halo,
+[data-theme='night'] .td-sun-halo {
+  display: none;
+}
+.td-sun-now {
+  font: 600 11px / 1 var(--font-sans);
+  fill: var(--text-2);
+  paint-order: stroke;
+  stroke: var(--bg-2);
+  stroke-width: 3px;
+}
+.td-sun-legend {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0 0;
+}
+.td-sun-legend dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 500 calc(12rem / 17) / 1.2 var(--font-sans);
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.td-sun-legend dt i {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.td-sun-legend dd {
+  margin: 4px 0 0;
+}
+.td-sun-time {
+  font: 600 calc(19rem / 17) / 1.1 var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+/* ---------- Today's devotion ---------------------------------------------- */
+.td-devcard.surface {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.td-devcard-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.td-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--ok);
+}
+.td-devcard-title {
+  margin-top: 2px;
+}
+.td-turns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 10px;
+  font: 500 calc(14rem / 17) / 1.2 var(--font-sans);
+  color: var(--text-2);
+}
+.td-turn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.td-turn b {
+  color: var(--text);
+  font-weight: 650;
+}
+.td-devcard-chev {
+  margin-left: auto;
+}
+
+/* ---------- After --------------------------------------------------------- */
+.td-after-kids {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.td-after-kid {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+}
+.td-after-kid-text {
+  flex: 1 1 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.td-after-kid-text b {
+  font: 600 calc(15.5rem / 17) / 1.25 var(--font-sans);
+  color: var(--text);
+}
+.td-after-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.td-after-stat.surface {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.td-footer {
+  margin-top: 36px;
+}
+}
+
+/* On iPad the story runs edge to edge; its card and profile stay in the column. */
+@layer components {
+  .td-story {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+  }
+}
