@@ -6,7 +6,7 @@
 export const packing = [
   {
     group: 'Layers for everyone (×5)',
-    note: 'Cold mornings in the 20s–30s, warm afternoons in the 60s–70s. Dress like an onion.',
+    note: 'Cold mornings in the 20s–30s, warm afternoons in the 60s–70s. Dress in layers.',
     items: [
       'Warm puffy or fleece jacket',
       'Long-sleeve base layer',
@@ -75,7 +75,7 @@ export const packing = [
       'Open this app once on each device while online, then test in airplane mode',
       'Download ESV and NIV in the Bible app (text works offline; audio needs signal)',
       'Download offline maps for Mono and Inyo counties',
-      'Check Tioga Road status and the forecast (see "Before we go")',
+      'Check Tioga Road status and the forecast (see "Before you go")',
     ],
   },
 ];
