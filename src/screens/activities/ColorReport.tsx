@@ -19,7 +19,7 @@ const LL: Record<string, [number, number]> = {
   'Virginia Lakes': [38.047, -119.262],
   'Sagehen Summit': [37.86, -118.93],
 };
-const SIDE: Record<string, 'left' | 'right' | 'above' | 'below'> = { 'McGee Creek': 'below', 'Virginia Lakes': 'left', 'Convict Lake': 'left', 'Lundy Canyon': 'right', 'Conway Summit': 'left' };
+const SIDE: Record<string, 'left' | 'right' | 'above' | 'below'> = { 'McGee Creek': 'left', 'Virginia Lakes': 'below', 'Convict Lake': 'left', 'Lundy Canyon': 'right', 'Conway Summit': 'right' };
 const ON_MAP = SPOTS.filter((s) => LL[s.name]).map((s) => ({ s, at: project('eastside', ...LL[s.name]) as Pt }));
 const OFF_MAP = SPOTS.filter((s) => !LL[s.name]);
 
@@ -39,7 +39,7 @@ export default function ColorReport(_props: ScreenProps) {
               {ON_MAP.map(({ s, at }) => (
                 <g key={s.name}>
                   <circle cx={at[0]} cy={at[1]} r={7} className={`ac-dot ac-dot-${stageOf(s.level)}`} />
-                  <MapLabel at={at} title={`${s.rank}. ${s.name}`} sub={stageName(s.level)} side={SIDE[s.name] ?? (at[0] > 380 ? 'left' : 'right')} size="sm" />
+                  <MapLabel at={at} title={`${s.rank}. ${s.name}`} sub={stageName(s.level)} side={SIDE[s.name] ?? (at[0] > 380 ? 'left' : 'right')} offset={s.name === 'McGee Creek' ? [0, 14] : [0, 0]} size="sm" />
                 </g>
               ))}
               {(() => {
