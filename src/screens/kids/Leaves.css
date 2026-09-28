@@ -1,0 +1,337 @@
+/* Why leaves change. A sticky stage (leaf, pigment bars, season slider) over
+   a column of short chapters; on iPad the stage sits beside them. */
+@layer components {
+  .lv-layout {
+    position: relative;
+    margin-top: 16px;
+  }
+
+  /* ---------- Stage ------------------------------------------------------ */
+  .lv-stage-wrap {
+    position: sticky;
+    z-index: 5;
+    top: calc(var(--sat) + var(--navbar-h) + 10px);
+    padding: 0 max(var(--gutter), var(--sar)) 0 max(var(--gutter), var(--sal));
+  }
+  /* Once stuck, a band of page color hides text passing around the card. */
+  .lv-stage-wrap::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -18px;
+    bottom: -22px;
+    background: linear-gradient(180deg, var(--bg) 0, var(--bg) calc(100% - 26px), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .lv-stage-wrap[data-stuck]::before {
+    opacity: 1;
+  }
+  .lv-stage {
+    position: relative;
+    padding: 14px 16px 6px;
+  }
+  .lv-stage-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .lv-leaf {
+    position: relative;
+    flex: none;
+    width: 112px;
+    height: 112px;
+  }
+  .lv-glow {
+    position: absolute;
+    inset: -8%;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .lv-glow-green {
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--pig-green) 26%, transparent), transparent);
+  }
+  .lv-glow-gold {
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--pig-gold) 30%, transparent), transparent);
+  }
+  .lv-glow-red {
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--pig-red) 24%, transparent), transparent);
+  }
+  [data-theme='night'] .lv-glow {
+    display: none;
+  }
+  .lv-leaf-art,
+  .lv-layer {
+    position: absolute;
+    inset: 0;
+    display: block;
+  }
+  .lv-leaf-art {
+    inset: 4%;
+  }
+
+  .lv-bars {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .lv-bar-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .lv-bar-name {
+    min-width: 0;
+    font: 400 calc(12rem / 17) / 1.2 var(--font-sans);
+    color: var(--text-3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lv-bar-name b {
+    font: 600 calc(14rem / 17) / 1.2 var(--font-sans);
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .lv-bar-state {
+    flex: none;
+    font: 600 calc(12rem / 17) / 1.2 var(--font-sans);
+    color: var(--text-2);
+  }
+  .lv-track {
+    height: 7px;
+    margin-top: 5px;
+    border-radius: 4px;
+    background: var(--fill-2);
+    overflow: hidden;
+  }
+  .lv-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    transform-origin: 0 50%;
+  }
+
+  /* ---------- Season slider --------------------------------------------- */
+  .lv-slider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .lv-end {
+    flex: none;
+    font: 600 calc(12.5rem / 17) / 1 var(--font-sans);
+    color: var(--text-3);
+  }
+  .lv-slider input[type='range'] {
+    --p: 0;
+    --track: linear-gradient(to right, transparent calc(var(--p) * 100%), color-mix(in srgb, var(--bg-2) 70%, transparent) 0), linear-gradient(90deg, var(--pig-green) 0%, var(--pig-gold) 58%, var(--pig-red) 100%);
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    margin: 0;
+    background: transparent;
+    -webkit-appearance: none;
+    appearance: none;
+    cursor: pointer;
+  }
+  .lv-slider input[type='range']:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+  .lv-slider input[type='range']::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--track);
+    box-shadow: 0 0 0 0.5px var(--line) inset;
+  }
+  .lv-slider input[type='range']::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--track);
+  }
+  .lv-slider input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    margin-top: -10px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--seg-thumb);
+    box-shadow: 0 0 0 1.5px var(--text-2) inset, 0 3px 10px -2px rgba(40, 20, 5, 0.35);
+  }
+  .lv-slider input[type='range']::-moz-range-thumb {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--seg-thumb);
+    box-shadow: 0 0 0 1.5px var(--text-2) inset, 0 3px 10px -2px rgba(40, 20, 5, 0.35);
+  }
+
+  /* ---------- Chapters --------------------------------------------------- */
+  .lv-chapters {
+    margin: 40px 0 0;
+    padding: 0 calc(var(--gutter-text) + var(--sar)) 0 calc(var(--gutter-text) + var(--sal));
+    list-style: none;
+  }
+  /* The chapter at the reading line is ink; the rest step back to ink-3
+     (still AA), so nothing fades below readable. */
+  .lv-chapter {
+    margin-bottom: 26vh;
+    --ink: var(--text-3);
+  }
+  .lv-chapter:last-child {
+    margin-bottom: 14vh;
+  }
+  .lv-chapter[data-active] {
+    --ink: var(--text);
+  }
+  .lv-chapter:not([data-active]) .lv-step {
+    opacity: 0.55;
+  }
+  .lv-step {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    margin-bottom: 10px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--pig) 22%, var(--fill-2));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--pig) 45%, transparent) inset;
+    color: var(--text);
+    font: 600 calc(13rem / 17) / 1 var(--font-sans);
+    transition: opacity 0.4s var(--ease-out);
+  }
+  .lv-chapter-title {
+    font-family: var(--font-serif);
+    font-weight: 440;
+    font-size: calc(25rem / 17);
+    line-height: 1.12;
+    letter-spacing: -0.016em;
+    color: var(--ink);
+    transition: color 0.4s var(--ease-out);
+  }
+  .lv-chapter-text {
+    margin-top: 8px;
+    max-width: 30em;
+    font-family: var(--font-serif);
+    font-size: calc(19.5rem / 17);
+    line-height: 1.5;
+    letter-spacing: -0.003em;
+    font-variation-settings: 'opsz' 18;
+    color: var(--ink);
+    transition: color 0.4s var(--ease-out);
+  }
+
+  /* ---------- After the story ------------------------------------------- */
+  .lv-after {
+    margin-top: 8px;
+  }
+  .lv-pigments {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .lv-pigments li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .lv-swatch {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin-top: 3px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0.5px var(--line-2) inset;
+  }
+  .lv-pig-name {
+    display: block;
+    font: 600 calc(15rem / 17) / 1.3 var(--font-sans);
+    color: var(--text);
+  }
+  .lv-pig-text {
+    display: block;
+    margin-top: 2px;
+    font: 400 calc(15rem / 17) / 1.45 var(--font-sans);
+    color: var(--text-2);
+  }
+  .lv-facts {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font: 400 calc(15rem / 17) / 1.47 var(--font-sans);
+    color: var(--text-2);
+  }
+  .lv-facts li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .lv-fact-pip {
+    flex: none;
+    margin-top: 0.42em;
+  }
+  .lv-hunt-btn {
+    margin-top: 16px;
+  }
+  .lv-wonder {
+    max-width: 34em;
+  }
+
+  /* ---------- iPad: the stage beside the story -------------------------- */
+  @media (min-width: 700px) {
+    .lv-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      gap: 32px;
+      padding: 0 max(var(--gutter), var(--sar)) 0 max(var(--gutter), var(--sal));
+    }
+    .lv-stage-wrap {
+      top: calc(var(--sat) + var(--navbar-h) + 24px);
+      align-self: start;
+      padding: 0;
+    }
+    .lv-stage-wrap::before {
+      display: none;
+    }
+    .lv-stage {
+      padding: 22px 22px 10px;
+    }
+    .lv-stage-top {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 22px;
+    }
+    .lv-leaf {
+      width: 200px;
+      height: 200px;
+      margin: 4px auto 0;
+    }
+    .lv-chapters {
+      margin-top: 12vh;
+      padding: 0;
+    }
+    .lv-chapter {
+      margin-bottom: 32vh;
+    }
+    .lv-chapter:last-child {
+      margin-bottom: 26vh;
+    }
+  }
+}
