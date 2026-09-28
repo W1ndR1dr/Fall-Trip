@@ -11,6 +11,7 @@ import { After } from './After';
 import { Bento } from './Bento';
 import { During } from './During';
 import { DayStrip, Hero } from './Hero';
+import { HeroMap } from './HeroMap';
 import './today.css';
 
 // The story's terrain and scroll machinery load after first paint.
@@ -46,11 +47,12 @@ function Before({ now }: { now: Date }) {
     <Page title="Today" docTitle="Fall Trip" hideTitle sky="dawn" leading={Wordmark} actions={<IconButton href="/settings" icon={GearSix} label="Settings" />}>
       <Hero now={now} />
       <DayStrip now={now} />
-      <NamesCard />
+      <HeroMap onFollow={() => document.getElementById('td-drive')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
       <div className="section">
         <Bento />
       </div>
-      <Section title="The drive" serif note="Friday · about 8 hours, over Tioga Pass" className="td-drive">
+      <NamesCard />
+      <Section id="td-drive" title="Follow the route" serif note="Friday to Sunday, chapter by chapter" className="td-drive">
         <Suspense fallback={<div className="td-story-wait" />}>
           <Story />
         </Suspense>
