@@ -1,10 +1,11 @@
-# Work in progress (paused)
+# Rebuild status (paused)
 
-Partial screen code for the Plan and Devotions areas, saved when the rebuild was
-paused. It is not built or shipped (it lives outside `src/`). To resume, copy
-`wip/<area>/*` into `src/screens/<area>/`, apply `content.diff` if it is useful,
-then finish against `docs/DESIGN-DIRECTION.md` and `docs/UI.md`.
+Done and merged: foundation, Today, Kids home / leaf hunt / why leaves change,
+Plan (day timeline, routes, packing, before you go), Devotions (home, devotion,
+memory verse, journal, look back). `npm run build` and the offline test pass.
 
-Still to build: Plan, Devotions, Activities, Kids (tracks, rocks, sky, games,
-draw, photos, cozy), Settings/About/Install. Then merge, review, and re-enable
-auto-deploy in `.github/workflows/pages.yml`.
+Still placeholders: Activities (explore, activity, color report, food), Kids
+(tracks, rocks, sky, games, draw, photos, cozy), Settings/About/Install.
+The briefs for them are in the build workflow notes and docs/DESIGN-DIRECTION.md;
+the rulebook is docs/UI.md. After those: review against the prototypes, then
+re-enable auto-deploy in .github/workflows/pages.yml.
