@@ -200,7 +200,7 @@
     /* grows with the row; the drawing stays centered in the space */
     display: block;
     flex: 1 0 auto;
-    width: min(76%, 104px);
+    width: min(90%, 124px);
     aspect-ratio: 1;
     margin: 0 auto 6px;
   }
@@ -272,8 +272,13 @@
     border-radius: 50%;
     background: transparent;
     color: var(--text-3);
+    opacity: 0.55;
     cursor: pointer;
-    transition: background-color 0.18s, color 0.18s;
+    transition: background-color 0.18s, color 0.18s, opacity 0.18s;
+  }
+  .hunt-hint:hover,
+  .hunt-hint:focus-visible {
+    opacity: 1;
   }
   .hunt-hint::before {
     content: '';
