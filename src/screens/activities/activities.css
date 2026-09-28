@@ -1,0 +1,431 @@
+@layer components {
+  .ac-dim {
+    color: var(--text-2);
+  }
+  .ac-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .ac-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Filters wrap: nothing hides off-screen */
+  .ac-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 18px;
+  }
+
+  /* Shortcut cards under the filters */
+  .ac-shortcuts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 0 16px 6px;
+  }
+  .ac-shortcut {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 104px;
+  }
+  .ac-shortcut-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .ac-shortcut b {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* Activity grid */
+  .ac-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 0 16px;
+  }
+  @media (min-width: 700px) {
+    .ac-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .ac-shortcuts {
+      max-width: none;
+    }
+  }
+
+  .ac-card {
+    position: relative;
+  }
+  .ac-card-link {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 44px 14px 14px;
+    min-height: 104px;
+    border-radius: inherit;
+    color: inherit;
+    text-decoration: none;
+  }
+  .ac-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
+  }
+  .ac-card-name {
+    padding-right: 4px;
+  }
+  .ac-card-star {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+  }
+  .ac-chev {
+    position: absolute;
+    right: 16px;
+    bottom: 18px;
+    color: var(--text-3);
+  }
+  .ac-card-thumb {
+    flex: none;
+  }
+  .ac-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-top: 4px;
+    color: var(--text-2);
+  }
+  .ac-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  /* Terrain thumbnails */
+  .ac-thumb {
+    position: relative;
+    overflow: hidden;
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 1px var(--line);
+    background: var(--bg-3);
+  }
+  .ac-thumb::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px var(--line);
+    pointer-events: none;
+  }
+  .ac-hero-wrap {
+    margin-top: 4px;
+  }
+  .ac-hero {
+    border-radius: 22px;
+  }
+
+  /* Effort dots */
+  .ac-effort {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .ac-effort i {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px var(--text-3);
+  }
+  .ac-effort i.on {
+    background: var(--text-2);
+    box-shadow: none;
+  }
+
+  /* Star */
+  .ac-star.is-on {
+    color: var(--accent-mark);
+  }
+  .ac-starred svg {
+    color: var(--accent-mark);
+  }
+
+  /* Detail */
+  .ac-lede {
+    margin: 16px 0 14px;
+    color: var(--text);
+  }
+  .ac-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .ac-finds {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .ac-find-art {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    margin-right: 2px;
+  }
+  .ac-foot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 18px;
+  }
+
+  /* Spectrum (Just starting → Past peak) */
+  .ac-spectrum {
+    position: relative;
+    display: flex;
+    gap: 3px;
+    height: 8px;
+    margin: 6px 0 4px;
+  }
+  .ac-spec {
+    flex: 1;
+    border-radius: 3px;
+  }
+  .ac-spec-0,
+  .ac-dot-0 {
+    background: var(--pig-green);
+    fill: var(--pig-green);
+  }
+  .ac-spec-1,
+  .ac-dot-1 {
+    background: color-mix(in srgb, var(--pig-green) 45%, var(--pig-gold));
+    fill: color-mix(in srgb, var(--pig-green) 45%, var(--pig-gold));
+  }
+  .ac-spec-2,
+  .ac-dot-2 {
+    background: var(--pig-gold);
+    fill: var(--pig-gold);
+  }
+  .ac-spec-3,
+  .ac-dot-3 {
+    background: color-mix(in srgb, var(--pig-gold) 40%, var(--pig-red));
+    fill: color-mix(in srgb, var(--pig-gold) 40%, var(--pig-red));
+  }
+  .ac-spec-4,
+  .ac-dot-4 {
+    background: color-mix(in srgb, var(--pig-red) 55%, var(--text-3));
+    fill: color-mix(in srgb, var(--pig-red) 55%, var(--text-3));
+  }
+  .ac-spec-mark {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    width: 3px;
+    margin-left: -1.5px;
+    border-radius: 2px;
+    background: var(--text);
+    box-shadow: 0 0 0 2px var(--bg-2);
+  }
+  .ac-scale-legend {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-3);
+  }
+
+  /* Color map */
+  .ac-map-card {
+    overflow: hidden;
+    position: relative;
+  }
+  .ac-compass {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--bg-2) 86%, transparent);
+    color: var(--text-2);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  .ac-compass-arrow {
+    font-weight: 700;
+    color: var(--text);
+  }
+  .ac-map {
+    aspect-ratio: 520 / 527;
+    max-height: 70vh;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .ac-dot {
+    stroke: var(--bg-2);
+    stroke-width: 2px;
+    vector-effect: non-scaling-stroke;
+  }
+  .ac-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    padding: 12px 16px 4px;
+    color: var(--text-2);
+  }
+  .ac-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ac-dot-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .ac-map-note {
+    padding: 4px 16px 14px;
+  }
+
+  /* Elevation chart */
+  .ac-chart {
+    margin: 0;
+  }
+  .ac-chart svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .ac-band {
+    fill: color-mix(in srgb, var(--accent) 16%, transparent);
+  }
+  .ac-band-label {
+    font: 600 10px/1 var(--font-sans);
+    fill: var(--accent-text);
+    letter-spacing: 0.02em;
+  }
+  .ac-grid-line {
+    stroke: var(--line);
+    stroke-width: 1;
+  }
+  .ac-axis {
+    font: 500 10px/1 var(--font-sans);
+    fill: var(--text-3);
+  }
+  .ac-chart figcaption {
+    margin-top: 8px;
+  }
+
+  /* Spot cards */
+  .ac-spot {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ac-spot-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .ac-spot-title {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+  .ac-rank {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: var(--fill);
+    font: 600 0.8rem/1 var(--font-sans);
+    color: var(--text-2);
+  }
+  .ac-facts {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 12px;
+    margin: 6px 0 0;
+  }
+  .ac-facts dt {
+    color: var(--text-3);
+  }
+  .ac-facts dd {
+    margin: 0;
+  }
+
+  /* Food */
+  .ac-closed {
+    margin-bottom: 4px;
+  }
+  .ac-closed-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: var(--ember);
+  }
+  .ac-food {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .ac-food-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .ac-food-name {
+    padding-top: 10px;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .ac-hours {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    color: var(--text);
+  }
+  .ac-hours svg {
+    flex: none;
+    margin-top: 2px;
+    color: var(--text-3);
+  }
+  .ac-food-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .ac-recipes {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+  }
+  .ac-recipes-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+  .ac-recipes .ac-chev {
+    position: static;
+  }
+}
