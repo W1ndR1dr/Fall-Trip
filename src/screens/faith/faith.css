@@ -1,0 +1,868 @@
+/* ==========================================================================
+   Faith area: devotions, the passage card, memory verse, journal, look back.
+   Tokens only (night vision recolors everything). Prefixes: dv- devotion,
+   psg- passage, fh- faith home, vg- verse game, jn- journal, lb- look back,
+   fx- shared effects.
+   ========================================================================== */
+
+@layer components {
+
+/* ---------- Shared effects ------------------------------------------------ */
+.fx-autoh {
+  overflow: hidden;
+  /* room for verse numbers and descenders at the clip edges: the padding
+     lives on the measured inner box, so the animated height includes it */
+  margin: -4px -6px;
+}
+.fx-autoh > div {
+  display: flow-root;
+  padding: 4px 6px;
+}
+.fx-burst {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.fx-leaf {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  overflow: visible;
+  filter: var(--art-filter);
+}
+.fx-parent {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--fill-2);
+  color: var(--text-2);
+  box-shadow: 0 0 0 1.5px var(--line-2) inset;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* LORD in small capitals, as printed Bibles set it. */
+.sc-lord {
+  font-variant-caps: small-caps;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Passage card -------------------------------------------------- */
+.psg {
+  padding: 18px 18px 14px;
+}
+.psg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  min-height: 36px;
+}
+.psg-ref {
+  font: 600 calc(15.5rem / 17) / 1.25 var(--font-sans);
+  letter-spacing: -0.012em;
+  color: var(--text);
+}
+.psg-tr {
+  font-weight: 500;
+  color: var(--text-3);
+}
+.psg-seg {
+  width: 116px;
+  flex: none;
+}
+.psg-note {
+  margin-top: 6px;
+}
+.psg-text {
+  position: relative;
+  margin-top: 12px;
+}
+.psg-words {
+  position: relative;
+  display: block;
+}
+.psg-w {
+  display: inline-block;
+  margin-right: 0.24em;
+}
+.psg-v {
+  display: inline-block;
+  margin-right: 0.18em;
+}
+.psg-kid {
+  font-family: var(--font-kid);
+  font-size: calc(23rem / 17);
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--text);
+}
+.psg-kid .t-verse {
+  font-size: calc(12rem / 17);
+}
+.psg-yv {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 44px;
+  margin: 4px 0 -6px;
+  font-size: calc(14rem / 17);
+  font-weight: 600;
+}
+.psg-div {
+  margin: 12px 0 14px;
+}
+.psg-div-notice {
+  margin: 10px 0 12px;
+}
+.psg-notice {
+  text-wrap: pretty;
+}
+
+/* ---------- Devotion ------------------------------------------------------ */
+.dv-turns {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.dv-turn {
+  display: inline-flex;
+}
+.dv-rotate {
+  margin-left: auto;
+}
+.dv-sec {
+  margin-top: 30px;
+}
+.dv-sec + .dv-sec {
+  position: relative;
+  padding-top: 26px;
+}
+.dv-sec + .dv-sec::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: max(var(--gutter-text), var(--sal));
+  right: max(var(--gutter-text), var(--sar));
+  border-top: 1px solid var(--line);
+}
+.dv-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.dv-h {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.dv-h:focus {
+  outline: none;
+}
+.dv-h:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+.dv-num {
+  font-size: calc(13rem / 17);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--night);
+}
+.dv-label {
+  color: var(--text-2);
+  letter-spacing: 0.1em;
+}
+.dv-who {
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.dv-kid {
+  font-family: var(--font-kid);
+  font-size: calc(22rem / 17);
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--text);
+}
+.dv-prayer {
+  padding-left: 16px;
+  box-shadow: 2px 0 0 var(--night) inset;
+}
+.dv-why {
+  margin-top: 14px;
+  color: var(--text-3);
+}
+.dv-why b {
+  color: var(--text-2);
+  font-weight: 600;
+}
+.dv-hymn {
+  margin-top: 16px;
+}
+.dv-hymn-title {
+  margin-top: 4px;
+}
+.dv-hymn-lines {
+  margin: 10px 0 12px;
+}
+.dv-finish {
+  display: flex;
+  gap: 10px;
+  margin-top: 36px;
+  padding-left: max(var(--gutter), var(--sal));
+  padding-right: max(var(--gutter), var(--sar));
+}
+.dv-done-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.dv-done .check {
+  --check-fill: var(--text);
+}
+
+/* The docked stepper */
+.dv-dock {
+  padding: 5px;
+}
+.dv-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dv-steps {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  isolation: isolate;
+}
+.dv-lens {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: calc(100% / var(--n, 5));
+  border-radius: var(--r-seg);
+  background: var(--seg-thumb);
+  box-shadow: var(--seg-thumb-shadow);
+  z-index: -1;
+}
+.dv-step {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: var(--r-seg);
+  background: transparent;
+  font: 600 min(calc(14rem / 17), 17px) / 1.1 var(--font-sans);
+  letter-spacing: -0.012em;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.dv-step:focus-visible {
+  outline-offset: -2px;
+}
+.dv-step-dot {
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--text-3);
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 0.25s var(--ease-out), transform 0.3s var(--ease-out);
+}
+.dv-step-dot[data-on] {
+  opacity: 0.85;
+  transform: none;
+}
+.dv-next-wrap {
+  position: relative;
+  flex: none;
+  display: inline-flex;
+}
+.dv-next {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--text);
+  color: var(--bg-2);
+  cursor: pointer;
+  overflow: hidden;
+  transition: background-color 0.25s var(--ease-out), color 0.25s var(--ease-out);
+}
+.dv-next[data-mode='top'] {
+  background: var(--fill-2);
+  color: var(--text);
+  box-shadow: 0 0 0 0.5px var(--line) inset;
+}
+.dv-next-icon {
+  display: grid;
+  place-items: center;
+}
+[data-theme='dark'] .dv-next:not([data-mode='top']) {
+  background: var(--text-2);
+  color: var(--bg);
+}
+[data-theme='night'] .dv-next {
+  background: var(--accent-soft);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--accent-line) inset;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dv-step-dot {
+    transition: opacity 0.12s;
+    transform: none;
+  }
+}
+
+/* ---------- Faith home ---------------------------------------------------- */
+.fh-count {
+  color: var(--text-3);
+}
+.fh-serif {
+  font-family: var(--font-serif);
+  font-weight: 450;
+  font-size: calc(18.5rem / 17);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.fh-day .row-sub {
+  margin-top: 1px;
+}
+.fh-date {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  min-height: 44px;
+  padding: 4px 0 5px;
+  border-radius: var(--r-well);
+  background: var(--fill);
+  box-shadow: 0 0 0 0.5px var(--line) inset;
+}
+.fh-date[data-today] {
+  background: var(--bg-2);
+  box-shadow: 0 0 0 1.5px var(--text) inset;
+}
+.fh-date-dow {
+  font: 700 calc(10rem / 17) / 1.1 var(--font-sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.fh-date-n {
+  font: 600 calc(19rem / 17) / 1.05 var(--font-sans);
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+.fh-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: 600 calc(13rem / 17) / 1.2 var(--font-sans);
+  color: var(--text-3);
+}
+.fh-live-title {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.fh-today {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 18px 16px;
+}
+.fh-today-art {
+  position: absolute;
+  right: -40px;
+  top: -58px;
+  width: 124px;
+  height: 124px;
+  opacity: 0.12;
+  transform: rotate(28deg);
+  pointer-events: none;
+}
+.fh-today-top {
+  position: relative;
+  display: flex;
+  min-height: 24px;
+  align-items: center;
+}
+.fh-today-title {
+  position: relative;
+  margin-top: 8px;
+  max-width: 15em;
+}
+.fh-today-when {
+  position: relative;
+  margin-top: 6px;
+}
+.fh-today-foot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+.fh-today-turns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fh-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  margin-left: auto;
+  padding: 0.3em 14px;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg-2);
+  font: 600 calc(14rem / 17) / 1.15 var(--font-sans);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.fh-go[data-done] {
+  background: var(--fill-2);
+  color: var(--text-2);
+  box-shadow: 0 0 0 0.5px var(--line) inset;
+}
+[data-theme='dark'] .fh-go:not([data-done]) {
+  background: var(--text-2);
+  color: var(--bg);
+}
+[data-theme='night'] .fh-go:not([data-done]) {
+  background: var(--accent-soft);
+  color: var(--text);
+  box-shadow: 0 0 0 1px var(--accent-line) inset;
+}
+.fh-verse {
+  padding: 16px 18px;
+}
+.fh-verse-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.fh-verse-ref {
+  font: 600 calc(14.5rem / 17) / 1.25 var(--font-sans);
+  letter-spacing: -0.01em;
+}
+.fh-verse-tr {
+  color: var(--text-3);
+  font-weight: 500;
+}
+.fh-verse-text {
+  margin-top: 10px;
+  font-family: var(--font-serif);
+  font-size: calc(21rem / 17);
+  line-height: 1.42;
+  letter-spacing: -0.008em;
+  color: var(--text);
+  text-wrap: pretty;
+}
+.fh-vw {
+  display: inline-block;
+  margin-right: 0.24em;
+  border-radius: 6px;
+}
+.fh-vw[data-hidden] {
+  color: transparent;
+  background: var(--fill-2);
+  box-shadow: 0 0 0 0.5px var(--line) inset;
+  line-height: 1.12;
+}
+.fh-verse-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+.fh-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.fh-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 128px;
+  padding: 14px 14px 16px;
+}
+.fh-tile-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-well);
+  background: var(--night-soft);
+  color: var(--night);
+}
+.fh-tile-title {
+  margin-top: 14px;
+  font: 600 calc(15.5rem / 17) / 1.25 var(--font-sans);
+  letter-spacing: -0.012em;
+  color: var(--text);
+}
+.fh-tile-sub {
+  font: 400 calc(13rem / 17) / 1.35 var(--font-sans);
+  color: var(--text-3);
+}
+.fh-foot {
+  margin-top: 26px;
+  max-width: 40em;
+}
+
+/* ---------- Memory verse game ---------------------------------------------- */
+.vg-card {
+  padding: 16px 18px 18px;
+}
+.vg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.vg-count {
+  color: var(--text-3);
+}
+.vg-stage {
+  position: relative;
+}
+.vg-words {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 1px;
+  margin: 16px -4px 4px;
+  font-family: var(--font-serif);
+  font-size: calc(30rem / 17);
+  line-height: 1.25;
+  letter-spacing: -0.012em;
+  font-variation-settings: 'opsz' 36;
+  color: var(--text);
+}
+.vg-kid {
+  font-family: var(--font-kid);
+  font-variation-settings: normal;
+  letter-spacing: 0;
+}
+@media (min-width: 700px) {
+  .vg-words {
+    font-size: calc(40rem / 17);
+  }
+}
+.vg-word {
+  position: relative;
+  display: inline-grid;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.02em 0.1em;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.vg-word > * {
+  grid-area: 1 / 1;
+}
+.vg-slot {
+  align-self: center;
+  height: 0.9em;
+  border-radius: 8px;
+  background: var(--fill-2);
+  box-shadow: 0 0 0 1px var(--line) inset;
+}
+.vg-word[data-peek] .vg-ink {
+  color: var(--text-2);
+}
+.vg-word:focus-visible {
+  outline-offset: 0;
+}
+.vg-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+.vg-actions {
+  margin-top: 16px;
+  padding-left: max(var(--gutter), var(--sal));
+  padding-right: max(var(--gutter), var(--sar));
+}
+.vg-play {
+  display: flex;
+  gap: 8px;
+}
+.vg-done {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 14px;
+  padding: 14px 14px 14px 16px;
+  border-radius: var(--r-card);
+  background: var(--bg-2);
+  box-shadow: var(--shadow-card);
+}
+.vg-done-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--night-soft);
+  color: var(--night);
+}
+.vg-done-text {
+  flex: 1;
+  min-width: 12em;
+}
+.vg-tip {
+  margin-top: 14px;
+}
+.vg-notice {
+  margin-top: 18px;
+}
+
+/* ---------- Journal -------------------------------------------------------- */
+.jn-prompt {
+  margin-top: 26px;
+}
+.jn-prompt-row {
+  margin-top: 6px;
+  min-height: 1.2em;
+}
+.jn-q {
+  font-size: calc(26rem / 17);
+  line-height: 1.12;
+}
+.jn-another {
+  margin: 8px 0 0 -10px;
+  color: var(--text-2);
+}
+.jn-card {
+  margin: 14px max(var(--gutter), var(--sar)) 0 max(var(--gutter), var(--sal));
+  border-radius: var(--r-card);
+  background: var(--bg-2);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.jn-entry {
+  position: relative;
+  padding: 12px 16px 10px;
+  transition: background-color 0.2s;
+}
+.jn-entry + .jn-entry::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 16px;
+  right: 0;
+  border-top: 1px solid var(--line);
+}
+.jn-entry:focus-within {
+  background: var(--fill);
+}
+.jn-who {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 30px;
+}
+.jn-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  cursor: text;
+}
+.jn-name {
+  font: 600 calc(15rem / 17) / 1.2 var(--font-sans);
+  letter-spacing: -0.01em;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.jn-saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-3);
+}
+.jn-input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  padding: 8px 0 6px 38px;
+  border: 0;
+  background: transparent;
+  resize: none;
+  overflow: hidden;
+  font-family: var(--font-serif);
+  font-size: max(16px, calc(19rem / 17));
+  line-height: 1.45;
+  letter-spacing: -0.004em;
+  color: var(--text);
+  outline: none;
+}
+.jn-input::placeholder {
+  color: var(--text-3);
+  opacity: 0.8;
+}
+.jn-input:focus-visible {
+  outline: none;
+}
+/* Text fields always match :focus-visible, so the writing row gets a quiet
+   but clear marker (fill + a focus-ink bar at the leading edge), not a box. */
+.jn-entry:has(.jn-input:focus-visible) {
+  box-shadow: 3px 0 0 var(--focus) inset;
+}
+@media (min-width: 700px) {
+  .jn-entry {
+    padding: 16px 20px 14px;
+  }
+  .jn-input {
+    font-size: calc(21rem / 17);
+    min-height: 64px;
+  }
+}
+
+/* ---------- Look back ------------------------------------------------------ */
+.lb-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+.lb-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 14px 13px;
+  border-radius: var(--r-tile);
+  background: var(--bg-2);
+  box-shadow: var(--shadow-card);
+}
+.lb-stat-n {
+  font: 600 calc(30rem / 17) / 1 var(--font-sans);
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+.lb-stat-l {
+  font: 500 calc(12.5rem / 17) / 1.25 var(--font-sans);
+  color: var(--text-3);
+}
+.lb-days {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lb-day {
+  padding: 16px 18px 6px;
+}
+.lb-day-head .t-footnote {
+  margin-top: 2px;
+}
+.lb-entries {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.lb-entry {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--line);
+}
+.lb-entry-text {
+  min-width: 0;
+}
+.lb-entry-name {
+  display: block;
+  font: 600 calc(13rem / 17) / 1.3 var(--font-sans);
+  color: var(--text-2);
+}
+.lb-entry-line {
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+.lb-bonus {
+  color: var(--text-3);
+}
+.lb-note {
+  color: var(--text-3);
+}
+.lb-check {
+  color: var(--text-2);
+  margin: 0 7px;
+}
+.lb-close {
+  padding: 18px 18px 14px;
+}
+.lb-close-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.lb-verse {
+  font-size: calc(23rem / 17);
+  line-height: 1.42;
+}
+.lb-prompt {
+  margin-top: 12px;
+}
+.lb-notice {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+} /* @layer components */
